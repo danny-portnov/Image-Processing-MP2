@@ -3,3 +3,14 @@
 ################################################################################
 
 /.vs
+/ImProc.tlog
+/c2dByteGrayImage.obj
+*.exe
+*.recipe
+*.ilk
+*.log
+*.obj
+*.pdb
+/ImProc.vcxproj
+/ImProc.vcxproj.FileListAbsolute.txt
+/vc142.idb
