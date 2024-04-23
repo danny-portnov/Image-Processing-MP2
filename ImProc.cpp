@@ -19,49 +19,6 @@ using namespace std;  // explain someday
 #define NUMBER_OF_COLUMNS 640
 
 
-//void PrepareFilter1(unsigned char filter[][5])
-//{
-//	filter[0][0] = 1;
-//	filter[0][1] = 1;
-//	filter[0][2] = 1;
-//	filter[0][3] = 1;
-//	filter[0][4] = 1;
-//	filter[1][0] = 1;
-//	filter[1][1] = 1;
-//	filter[1][2] = 1;
-//	filter[1][3] = 1;
-//	filter[1][4] = 1;
-//	filter[2][0] = 1;
-//	filter[2][1] = 1;
-//	filter[2][2] = 1;
-//	filter[2][3] = 1;
-//	filter[2][4] = 1;
-//	filter[3][0] = 1;
-//	filter[3][1] = 1;
-//	filter[3][2] = 1;
-//	filter[3][3] = 1;
-//	filter[3][4] = 1;
-//	filter[4][0] = 1;
-//	filter[4][1] = 1;
-//	filter[4][2] = 1;
-//	filter[4][3] = 1;
-//	filter[4][4] = 1;
-//}
-//
-//void PrepareFilter2(unsigned char filter[][7])
-//{
-//	filter[0][0] = 1;
-//	filter[0][1] = 1;
-//	filter[0][2] = 1;
-//	filter[1][0] = 1;
-//	filter[1][1] = 1;
-//	filter[1][2] = 1;
-//	filter[2][0] = 1;
-//	filter[2][1] = 1;
-//	filter[2][2] = 1;
-//}
-
-
 void PrepareGausssianFilter(double filter[], double sigma, int FilterHalfSize)
 {
 	double summa = 0;
@@ -138,10 +95,15 @@ void work1()
 	src.SaveToGrayBmpFile("Tim1LPF7c.bmp");
 }
 
+void work2()
+{
+
+}
+
 void main()
 {
 	work1();
-
+	work2();
 	
 	cout << "Press any key to exit" << endl;
 	_getch();
