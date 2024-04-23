@@ -221,9 +221,9 @@ void Question5()
 	c2dFloatGrayImage ImageRe("Tim1LPFF.bmp");
 	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
 	c2dFloatGrayImage Filter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	//CreateGaussianFilter(Filter, 80);
-	//inverseFilter(Filter, 0.01);
-	CreateCircle(Filter, 80, 20, 220);
+	CreateGaussianFilter(Filter, 80);
+	inverseFilter(Filter, 0.01);
+	//CreateCircle(Filter, 80, 220, 20);
 	ShiftHalfSize(ImageRe);
 	ShiftHalfSize(ImageIm);
 	DoFFT(ImageRe,
