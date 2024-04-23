@@ -146,9 +146,9 @@ void CreateCircle(c2dFloatGrayImage& Image, int  raduis, tFloat peripheryValue, 
 			int dx = centX - row;
 			int dy = centY - column;
 			if (((dx * dx) + (dy * dy)) <= (raduis * raduis))
-				floatImage[row][column] = centralValue;
+				Image.SetPixelValue(row,column,centralValue);
 			else
-				floatImage[row][column] = peripheryValue;
+				Image.SetPixelValue(row, column, peripheryValue);
 		}
 	}
 }
@@ -220,17 +220,18 @@ void Question5()
 {
 	c2dFloatGrayImage ImageRe("Tim1LPFF.bmp");
 	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	c2dFloatGrayImage InventedGaussFilter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	CreateGaussianFilter(InventedGaussFilter, 80);
-	inverseFilter(InventedGaussFilter, 0.01);
+	c2dFloatGrayImage Filter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
+	//CreateGaussianFilter(Filter, 80);
+	//inverseFilter(Filter, 0.01);
+	CreateCircle(Filter, 80, 20, 220);
 	ShiftHalfSize(ImageRe);
 	ShiftHalfSize(ImageIm);
 	DoFFT(ImageRe,
 		ImageIm,
 		FORWARD_FFT,
 		NORMALIZE_BY_SQRT);
-	InventedGaussFilter.SaveAsOptimalGrayBmpFile("InventedGaussFilter.bmp");
-	DoFiltrationInFD(ImageRe, ImageIm, InventedGaussFilter);
+	Filter.SaveAsOptimalGrayBmpFile("Filter.bmp");
+	DoFiltrationInFD(ImageRe, ImageIm, Filter);
 	DoFFT(ImageRe,
 		ImageIm,
 		REVERSE_FFT,
