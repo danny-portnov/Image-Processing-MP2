@@ -12,7 +12,8 @@ using namespace std;  // explain someday
 #include <math.h> 
 
 #include "c2dByteGrayImage.h"
-
+#include "c2dFloatGrayImage.h"
+#include "FFT.h"
 #include <time.h>  // for spead measurements
 
 #define NUMBER_OF_ROWS 480
@@ -81,8 +82,29 @@ void DoGaussianFiltration(c2dByteGrayImage& src,
 	} // of row
 }
 
+
+void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
+{
+	tFloat x, y, r, z;
+	for (int row = 0; row < image.NumberOfRows(); row++)
+	{
+		for (int column = 0; column < image.NumberOfColumns(); column++)
+		{
+			y = row - image.NumberOfRows() / 2;
+			x = column - image.NumberOfColumns() / 2;
+			r = sqrt(y * y + x * x);
+			z = r / sigmaRadius;
+			z = exp(-z * z);
+			image.SetPixelValue(row, column, z);
+		}
+	}
+}
+
+
 void work1()
 {
+	// Question 2 
+
 	c2dByteGrayImage src("Tim1.bmp");
 	double filter1[5] = { 0.066,0.246,0.388,0.246,0.066 }; //sum above 1..
 	double filter2[7];
@@ -93,16 +115,40 @@ void work1()
 	src.Init("Tim1.bmp");
 	DoGaussianFiltration(src, filter2, 7 / 2);
 	src.SaveToGrayBmpFile("Tim1LPF7c.bmp");
+
 }
 
 void work2()
 {
+	// Question 3
+	
+	c2dFloatGrayImage ImageRe("Tim1.bmp");
+	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
+	c2dFloatGrayImage GaussFilter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
+	CreateGaussianFilter(GaussFilter, 80);
+	ShiftHalfSize(ImageRe);
+	ShiftHalfSize(ImageIm);
+	DoFFT(ImageRe,
+		ImageIm,
+		FORWARD_FFT,
+		NORMALIZE_BY_SQRT);
+	ImageRe.SaveAsOptimalGrayBmpFile("OriginalReInFD.bmp");
+	ImageIm.SaveAsOptimalGrayBmpFile("OriginalImInFD.bmp");
+	GaussFilter.SaveAsOptimalGrayBmpFile("GaussFilter.bmp");
+	DoFiltrationInFD(ImageRe, ImageIm, GaussFilter);
+	DoFFT(ImageRe,
+		ImageIm,
+		REVERSE_FFT,
+		NORMALIZE_BY_SQRT);
+	ShiftHalfSize(ImageRe);
+	ShiftHalfSize(ImageIm);
+	ImageRe.SaveAsOptimalGrayBmpFile("Filtered.bmp");
 
 }
 
 void main()
 {
-	work1();
+	//work1();
 	work2();
 	
 	cout << "Press any key to exit" << endl;

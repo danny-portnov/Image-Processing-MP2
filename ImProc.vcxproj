@@ -76,11 +76,15 @@
   <ItemGroup>
     <ClCompile Include="c2dByteGrayImage.cpp" />
     <ClCompile Include="c2dFloatGrayImage.cpp" />
+    <ClCompile Include="FFT.cpp" />
     <ClCompile Include="ImProc.cpp" />
+    <ClCompile Include="PrimeFFTn.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="c2dByteGrayImage.h" />
     <ClInclude Include="c2dFloatGrayImage.h" />
+    <ClInclude Include="FFT.h" />
+    <ClInclude Include="PrimeFFTn.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
