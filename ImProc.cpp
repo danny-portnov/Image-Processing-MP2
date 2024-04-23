@@ -53,9 +53,11 @@ void DoGaussianFiltration(c2dByteGrayImage& src, double filter[], int FilterHalf
 			{
 				summa = summa + filter[FilterHalfSize + x] * (double)src.GetPixelValue(row, column + x);
 			} // of x
-			if (summa < 0) summa = 0;
-			if (summa > 255) summa = 255;
-			temp_dest.SetPixelValue(row, column, (unsigned char)summa);
+			if (summa < 0) 
+				summa = 0;
+			if (summa > 255) 
+				summa = 255;
+			temp_dest.SetPixelValue(row, column, (tByte)(summa+0.5));
 
 		} // of column
 	} // of row
@@ -98,7 +100,7 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 	}
 }
 
-void DoFiltrationByConvolution(c2dFloatGrayImage& src, c2dFloatGrayImage& dest, double filter[][5], double factor)
+void DoFiltrationByConvolution(c2dByteGrayImage& src, c2dByteGrayImage& dest, double filter[][5], double factor)
 {
 	int FilterHalfSize = 2;
 	dest.Clear();
@@ -117,7 +119,7 @@ void DoFiltrationByConvolution(c2dFloatGrayImage& src, c2dFloatGrayImage& dest, 
 			summa = summa * factor;
 			if (summa < 0) summa = 0;
 			if (summa > 255) summa = 255;
-			dest.SetPixelValue(row, column, (unsigned char)summa);
+			dest.SetPixelValue(row, column, (tByte)(summa+0.5));
 		} // of column
 	} // of row
 }
@@ -158,14 +160,14 @@ void Question2()
 	// Question 2 
 
 	c2dByteGrayImage src("Tim1.bmp");
-	double filter1[5] = { 0.066,0.246,0.388,0.246,0.066 }; //sum above 1..
+	double filter1[5];
 	double filter2[7];
 	PrepareGausssianFilter(filter1, 5.0, 2);
 	PrepareGausssianFilter(filter2, 1, 3);
-	DoGaussianFiltration(src, filter1, 5 / 2);
+	DoGaussianFiltration(src, filter1, 2);
 	src.SaveToGrayBmpFile("Tim1LPF5c.bmp");
 	src.Init("Tim1.bmp");
-	DoGaussianFiltration(src, filter2, 7 / 2);
+	DoGaussianFiltration(src, filter2, 3);
 	src.SaveToGrayBmpFile("Tim1LPF7c.bmp");
 
 }
@@ -199,21 +201,25 @@ void Question3()
 void Question4()
 {
 	// TODO: put filters in function prepare filter.
-	double filter1[5][5] = { {-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,24,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1} };
+	double filter1[5][5] = { {-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,49,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1} };
 	double filter2[5][5] = { {-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,23.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5} };
 	double filter3[5][5] = { {-1,-4,-6,-4,-1},{-4,-16,-24,-16,-4},{-6,-24,476,-24,-6},{-4,-16,-24,-16,-4},{-1,-4,-6,-4,-1} };
 	double filter4[5][5] = { {-1,-4,-6,-4,-1},{-4,-16,-24,-16,-4},{-6,-24,221,-24,-6},{-4,-16,-24,-16,-4},{-1,-4,-6,-4,-1} };
 	double filter5[3][3] = { {0, -1, 0},{-1, 5,-1},{0, -1, 0} };
 	double filter6[5][5] = { {0,0,-1,0,0},{0,-8,-21,-8,0},{-1,-21,299,-21,-1},{0,-8,-21,-8,0},{0,0,-1,0,0} };
+	//the filters above didn't give good results.
+	double filter7[3][3] = { {0, -1.0/4, 0},{-1.0/4, 2,-1.0/4},{0, -1.0/4, 0} };
 
-	c2dFloatGrayImage src("Tim1LPF5c.bmp");
-	c2dFloatGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
+	c2dByteGrayImage src("Tim1LPF5c.bmp");
+	c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
 	double factor1 = 1.0 / 25.0;
-	double factor2 = 1.0 / 256.0;
+	double factor3 = 1.0 / 256.0;
 	double factor6 = 1.0 / 179.0;
-	DoFiltrationByConvolution(src, dest, filter6, factor6);
-	//dest.SaveToGrayBmpFile("Tim1HPF1c.bmp",0,10);
-	dest.SaveAsOptimalGrayBmpFile("Tim1HPF1c.bmp");
+	DoFiltrationByConvolution(src, dest, filter3, factor3);
+	//dest.SaveToGrayBmpFile("Tim1HPF1c.bmp",150,255);
+	//dest.SaveAsOptimalGrayBmpFile("Tim1HPF1c.bmp");
+	dest.SaveToGrayBmpFile("Tim1HPF1c.bmp");
+
 }
 
 void Question5()
@@ -221,9 +227,9 @@ void Question5()
 	c2dFloatGrayImage ImageRe("Tim1LPFF.bmp");
 	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
 	c2dFloatGrayImage Filter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	CreateGaussianFilter(Filter, 80);
-	inverseFilter(Filter, 0.01);
-	//CreateCircle(Filter, 80, 220, 20);
+	//CreateGaussianFilter(Filter, 80);
+	//inverseFilter(Filter, 0.01);
+	CreateCircle(Filter, 80, 220, 20);
 	ShiftHalfSize(ImageRe);
 	ShiftHalfSize(ImageIm);
 	DoFFT(ImageRe,
@@ -243,10 +249,10 @@ void Question5()
 
 void main()
 {
-	//Question2();
+	Question2();
 	//Question3();
-	//Question4();
-	Question5();
+	Question4();
+	//Question5();
 
 	cout << "Press any key to exit" << endl;
 	_getch();
