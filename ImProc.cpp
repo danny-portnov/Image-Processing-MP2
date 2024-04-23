@@ -124,8 +124,7 @@ void DoGaussianFiltration(c2dByteGrayImage& src,
 	} // of row
 }
 
-
-void main()
+void work1()
 {
 	c2dByteGrayImage src("Tim1.bmp");
 	double filter1[5] = { 0.066,0.246,0.388,0.246,0.066 }; //sum above 1..
@@ -137,6 +136,11 @@ void main()
 	src.Init("Tim1.bmp");
 	DoGaussianFiltration(src, filter2, 7 / 2);
 	src.SaveToGrayBmpFile("Tim1LPF7c.bmp");
+}
+
+void main()
+{
+	work1();
 
 	
 	cout << "Press any key to exit" << endl;
