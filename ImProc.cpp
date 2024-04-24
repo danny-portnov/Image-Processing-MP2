@@ -324,15 +324,15 @@ void Question7()
 
 void main()
 {
-	char fig_src[] = "Tim1.bmp";
-	char dest_q2[2][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"} };
-	Question2(fig_src, dest_q2);
-	char dest_q3[] = "Tim1LPFF.bmp";
-	Question3(fig_src, dest_q3);
-	char files_src_q4[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
-	char files_dest1_q4[3][30] = { {"Tim1LPF5cHPF1c.bmp"},{"Tim1LPF7cHPF1c.bmp"},{"Tim1LPFFHPF1c.bmp"} };
-	char files_dest2_q4[3][30] = { {"Tim1LPF5cHPF2c.bmp"},{"Tim1LPF7cHPF2c.bmp"},{"Tim1LPFFHPF2c.bmp"} };
-	Question4(files_src_q4, files_dest1_q4, files_dest2_q4);
+	//char fig_src[] = "Tim1.bmp";
+	//char dest_q2[2][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"} };
+	//Question2(fig_src, dest_q2);
+	//char dest_q3[] = "Tim1LPFF.bmp";
+	//Question3(fig_src, dest_q3);
+	//char files_src_q4[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
+	//char files_dest1_q4[3][30] = { {"Tim1LPF5cHPF1c.bmp"},{"Tim1LPF7cHPF1c.bmp"},{"Tim1LPFFHPF1c.bmp"} };
+	//char files_dest2_q4[3][30] = { {"Tim1LPF5cHPF2c.bmp"},{"Tim1LPF7cHPF2c.bmp"},{"Tim1LPFFHPF2c.bmp"} };
+	//Question4(files_src_q4, files_dest1_q4, files_dest2_q4);
 	char files_src_q5[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
 	char files_dest_q5[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
 	Question5(480,640, files_src_q5, files_dest_q5);
