@@ -190,7 +190,7 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 // Applies a Gaussian filter in the frequency domain
 //  to the given image and saves the filtered image.
 // returns the filtered image name with added "LPFF" suffix
-string ApplyGaussianFilterInFD(string inputFileName)
+string ApplyFFT(string inputFileName)
 {
 	c2dFloatGrayImage ImageRe(AddBMPExtention(inputFileName).c_str());
 	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
@@ -293,7 +293,7 @@ void main()
 	vector<string> blurredImagesNames = ApplyFastGaussianFilterConvolution(grayImageName);
 
 	//Question 3
-	blurredImagesNames.push_back(ApplyGaussianFilterInFD(grayImageName));
+	blurredImagesNames.push_back(ApplyFFT(grayImageName));
 
 	//Question 4
 	ApplyHPFToBlurredImages(blurredImagesNames);
@@ -304,7 +304,7 @@ void main()
 	//Question 7
 	string TVTestImageName = "Tim2.bmp";
 	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
-	blurredTVImagesNames.push_back(ApplyGaussianFilterInFD(TVTestImageName));
+	blurredTVImagesNames.push_back(ApplyFFT(TVTestImageName));
 
 	ApplyHPFToBlurredImages(blurredTVImagesNames);
 	ApplyFFTToBlurredImages(320, 320, blurredTVImagesNames);
