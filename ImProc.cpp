@@ -78,7 +78,7 @@ void DoGaussianFiltration(c2dByteGrayImage& src, double filter[], int FilterHalf
 			} // of y
 			if (summa < 0) summa = 0;
 			if (summa > 255) summa = 255;
-			src.SetPixelValue(row, column, (unsigned char)summa);
+			src.SetPixelValue(row, column, (tByte)(summa + 0.5));
 		} // of column
 	} // of row
 }
@@ -110,9 +110,9 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 	}
 }
 
-void DoFiltrationByConvolution(c2dByteGrayImage& src, c2dByteGrayImage& dest, double filter[][3], double factor)
+void DoFiltrationByConvolution(c2dByteGrayImage& src, c2dByteGrayImage& dest, double filter[][7], double factor)
 {
-	int FilterHalfSize = 1;
+	int FilterHalfSize = 3;
 	dest.Clear();
 	for (int row = FilterHalfSize; row < src.NumberOfRows() - FilterHalfSize; row++)
 	{
@@ -188,7 +188,27 @@ void Question2(char fig_src[], char fig_dest[][30])
 	//DoGaussianFiltration(src, filter2, 3);
 	//src.SaveToGrayBmpFile(fig_dest[1]);
 
-	//Option2:
+	////Option2:
+	//c2dByteGrayImage src(fig_src);
+	//c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
+	//double filter1[5][5] = { { 1,4,7,4,1 },{4,16,26,16,4},{7,26,41,26,7},{4,16,26,16,4},{ 1,4,7,4,1 } };
+	//double factor1 = 1.0 / 273.0;
+	//double filter2[7][7] = { {0,0,1,2,1,0,0},{0,3,13,22,13,3,0},{1,13,59,97,59,13,1},{2,22,97,159,97,22,2},{1,13,59,97,59,13,1},{0,3,13,22,13,3,0},{0,0,1,2,1,0,0} };
+	//double factor2 = 1.0 / 1003.0;
+	////DoFiltrationByConvolution(src, dest, filter1, factor1);
+	////dest.SaveToGrayBmpFile(fig_dest[0]);
+	//DoFiltrationByConvolution(src, dest, filter2, factor2);
+	//dest.SaveToGrayBmpFile(fig_dest[1]);
+
+	//Option3:
+	c2dByteGrayImage src(fig_src);
+	double filter1[5] = { 0.061,0.242,0.383,0.242,0.061 };
+	double filter2[7] = { 0.006,0.061,0.242,0.383,0.242,0.061,0.006 };
+	DoGaussianFiltration(src, filter1, 2);
+	src.SaveToGrayBmpFile(fig_dest[0]);
+	src.Init(fig_src);
+	DoGaussianFiltration(src, filter2, 3);
+	src.SaveToGrayBmpFile(fig_dest[1]);
 
 }
 
@@ -247,12 +267,13 @@ void Question4(char files_src[][30], char files_dest1[][30], char files_dest2[][
 
 	for (int i = 0; i < 3; i++)
 	{
-		c2dByteGrayImage src(files_src[i]);
-		c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
-		DoFiltrationByConvolution(src, dest, filter10, 1);//instead of filter8
-		dest.SaveToGrayBmpFile(files_dest1[i]);
-		DoFiltrationByConvolution(src, dest, filter12, factor9);//instead of filter9,filter11
-		dest.SaveToGrayBmpFile(files_dest2[i]);
+		//TODO: remove conmment
+		//c2dByteGrayImage src(files_src[i]);
+		//c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
+		//DoFiltrationByConvolution(src, dest, filter10, 1);//instead of filter8
+		//dest.SaveToGrayBmpFile(files_dest1[i]);
+		//DoFiltrationByConvolution(src, dest, filter12, factor9);//instead of filter9,filter11
+		//dest.SaveToGrayBmpFile(files_dest2[i]);
 	}
 }
 
@@ -282,7 +303,7 @@ void Question5(int NumOfRows, int NumOfColumns, char files_src[][30], char files
 		ShiftHalfSize(ImageRe);
 		ShiftHalfSize(ImageIm);
 		//ImageRe.SaveAsOptimalGrayBmpFile(files_dest[i]);
-		ImageRe.SaveToGrayBmpFile(files_dest[i],0,0.00005);
+		ImageRe.SaveToGrayBmpFile(files_dest[i], 0, 0.00005);
 	}
 }
 
