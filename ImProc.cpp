@@ -110,9 +110,9 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 	}
 }
 
-void DoFiltrationByConvolution(c2dByteGrayImage& src, c2dByteGrayImage& dest, double filter[][7], double factor)
+void DoFiltrationByConvolution(c2dByteGrayImage& src, c2dByteGrayImage& dest, double filter[][3], double factor)
 {
-	int FilterHalfSize = 3;
+	int FilterHalfSize = 1;
 	dest.Clear();
 	for (int row = FilterHalfSize; row < src.NumberOfRows() - FilterHalfSize; row++)
 	{
@@ -267,13 +267,12 @@ void Question4(char files_src[][30], char files_dest1[][30], char files_dest2[][
 
 	for (int i = 0; i < 3; i++)
 	{
-		//TODO: remove conmment
-		//c2dByteGrayImage src(files_src[i]);
-		//c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
-		//DoFiltrationByConvolution(src, dest, filter10, 1);//instead of filter8
-		//dest.SaveToGrayBmpFile(files_dest1[i]);
-		//DoFiltrationByConvolution(src, dest, filter12, factor9);//instead of filter9,filter11
-		//dest.SaveToGrayBmpFile(files_dest2[i]);
+		c2dByteGrayImage src(files_src[i]);
+		c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
+		DoFiltrationByConvolution(src, dest, filter10, 1);//instead of filter8
+		dest.SaveToGrayBmpFile(files_dest1[i]);
+		DoFiltrationByConvolution(src, dest, filter12, factor9);//instead of filter9,filter11
+		dest.SaveToGrayBmpFile(files_dest2[i]);
 	}
 }
 
@@ -309,7 +308,18 @@ void Question5(int NumOfRows, int NumOfColumns, char files_src[][30], char files
 
 void Question7()
 {
-
+	char fig_src[] = "Tim2.bmp";
+	char dest_q2[2][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"} };
+	Question2(fig_src, dest_q2);
+	char dest_q3[] = "Tim2LPFF.bmp";
+	Question3(fig_src, dest_q3);
+	char files_src_q4[3][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"},{"Tim2LPFF.bmp"} };
+	char files_dest1_q4[3][30] = { {"Tim2LPF5cHPF1c.bmp"},{"Tim2LPF7cHPF1c.bmp"},{"Tim2LPFFHPF1c.bmp"} };
+	char files_dest2_q4[3][30] = { {"Tim2LPF5cHPF2c.bmp"},{"Tim2LPF7cHPF2c.bmp"},{"Tim2LPFFHPF2c.bmp"} };
+	Question4(files_src_q4, files_dest1_q4, files_dest2_q4);
+	char files_src_q5[3][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"},{"Tim2LPFF.bmp"} };
+	char files_dest_q5[3][30] = { {"Tim2LPF5cHPFf.bmp"},{"Tim2LPF7cHPFf.bmp"},{"Tim2LPFFHPFf.bmp"} };
+	Question5(320, 320, files_src_q5, files_dest_q5);
 }
 
 void main()
@@ -326,6 +336,8 @@ void main()
 	char files_src_q5[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
 	char files_dest_q5[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
 	Question5(480,640, files_src_q5, files_dest_q5);
+
+	//Question7();
 
 	cout << "Press any key to exit" << endl;
 	_getch();
