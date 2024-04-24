@@ -10,47 +10,31 @@ using namespace std;  // explain someday
 #include <math.h>
 #define _USE_MATH_DEFINES 
 #include <math.h> 
+#include <Windows.h>
+#include <vector>
 
 #include "c2dByteGrayImage.h"
 #include "c2dFloatGrayImage.h"
 #include "FFT.h"
-#include <time.h>  // for spead measurements
-
-#define NUMBER_OF_ROWS 480
-#define NUMBER_OF_COLUMNS 640
 
 
-void PrepareGausssianFilter(double filter[], double sigma, int FilterHalfSize)
+void DoGaussianFiltration(c2dByteGrayImage& source, double filter[], int filterHalfSize)
 {
-	double summa = 0;
-	double temp;
-	for (int i = 0; i < (2 * FilterHalfSize + 1); i++)
-	{
-		temp = (double)(i - FilterHalfSize) / sigma;
-		temp = exp(-temp * temp);
-		filter[i] = temp;
-		summa += temp;
-	}
-	for (int i = 0; i < (2 * FilterHalfSize + 1); i++)
-	{
-		filter[i] = filter[i] / summa;
-	}
-}
-
-void DoGaussianFiltration(c2dByteGrayImage& src, double filter[], int FilterHalfSize)
-{
+	int numRows = source.NumberOfRows();
+	int numColumns = source.NumberOfColumns();
+	c2dByteGrayImage temp_dest(numRows, numColumns);
 	c2dByteGrayImage temp_dest(src.NumberOfRows(), src.NumberOfColumns());
 	double summa;
 
 	// x direction
-	for (int row = 0; row < src.NumberOfRows(); row++)
+	for (int row = 0; row < numRows; row++)
 	{
-		for (int column = FilterHalfSize; column < src.NumberOfColumns() - FilterHalfSize; column++)
+		for (int column = filterHalfSize; column < numColumns - filterHalfSize; column++)
 		{
 			summa = 0;
-			for (int x = -FilterHalfSize; x <= FilterHalfSize; x++)
+			for (int x = -filterHalfSize; x <= filterHalfSize; x++)
 			{
-				summa = summa + filter[FilterHalfSize + x] * (double)src.GetPixelValue(row, column + x);
+				summa = summa + filter[filterHalfSize + x] * (double)source.GetPixelValue(row, column + x);
 			} // of x
 			if (summa < 0)
 				summa = 0;
@@ -62,67 +46,74 @@ void DoGaussianFiltration(c2dByteGrayImage& src, double filter[], int FilterHalf
 	} // of row
 
 	// Clear Source !!!
-	src.Clear();
+	source.Clear();
 
 	// y direction
-	for (int row = FilterHalfSize; row < src.NumberOfRows() - FilterHalfSize; row++)
+	for (int row = filterHalfSize; row < numRows - filterHalfSize; row++)
 	{
-		for (int column = 0; column < src.NumberOfColumns(); column++)
+		for (int column = 0; column < numColumns; column++)
 		{
 			summa = 0;
-			for (int y = -FilterHalfSize; y <= FilterHalfSize; y++)
+			for (int y = -filterHalfSize; y <= filterHalfSize; y++)
 			{
-				summa += filter[FilterHalfSize + y] * (double)temp_dest.GetPixelValue(row + y, column);
+				summa += filter[filterHalfSize + y] * (double)temp_dest.GetPixelValue(row + y, column);
 
 			} // of y
 			if (summa < 0) summa = 0;
 			if (summa > 255) summa = 255;
-			src.SetPixelValue(row, column, (tByte)(summa + 0.5));
+			source.SetPixelValue(row, column, (tByte)(summa + 0.5));
 		} // of column
 	} // of row
+}
+
+void Normalize(c2dFloatGrayImage& filter, int numPixels, double summa)
+{
+	tFloat* pixelPointer = filter.PointerToPixel();
+	for (int pixel = 0; pixel < numPixels; pixel++)
+	{
+		*pixelPointer /= summa;
+		pixelPointer++;
+	}
 }
 
 void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 {
 	tFloat x, y, r, z;
 	double summa = 0;
-	for (int row = 0; row < image.NumberOfRows(); row++)
+	int numRows = image.NumberOfRows();
+	int numColumns = image.NumberOfColumns();
+	for (int row = 0; row < numRows; row++)
 	{
-		for (int column = 0; column < image.NumberOfColumns(); column++)
+		for (int column = 0; column < numColumns; column++)
 		{
-			y = row - image.NumberOfRows() / 2;
-			x = column - image.NumberOfColumns() / 2;
+			y = row - numRows / 2;
+			x = column - numColumns / 2;
 			r = sqrt(y * y + x * x);
 			z = r / sigmaRadius;
 			z = exp(-z * z);
 			summa += z;
 			image.SetPixelValue(row, column, z);
 		}
-	}
-	//for (int row = 0; row < image.NumberOfRows(); row++)
-	//{
-	//	for (int column = 0; column < image.NumberOfColumns(); column++)
-	//	{
-	//		tFloat* ptr = image.fastAndDangerousPointerToPixel(row, column);
-	//		*ptr /= summa;
-	//	}
-	//}
+	Normalize(image, image.NumberOfPixels(), summa);
+}
 }
 
-void DoFiltrationByConvolution(c2dByteGrayImage& src, c2dByteGrayImage& dest, double filter[][3], double factor)
+void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest, double filter[][3], double factor)
 {
-	int FilterHalfSize = 1;
+	int filterHalfSize = 1;
 	dest.Clear();
-	for (int row = FilterHalfSize; row < src.NumberOfRows() - FilterHalfSize; row++)
+	int numRows = source.NumberOfRows();
+	int numColumns = source.NumberOfColumns();
+	for (int row = filterHalfSize; row < numRows - filterHalfSize; row++)
 	{
-		for (int column = FilterHalfSize; column < src.NumberOfColumns() - FilterHalfSize; column++)
+		for (int column = filterHalfSize; column < numColumns - filterHalfSize; column++)
 		{
 			double summa = 0;
-			for (int y = -FilterHalfSize; y <= FilterHalfSize; y++)
+			for (int y = -filterHalfSize; y <= filterHalfSize; y++)
 			{
-				for (int x = -FilterHalfSize; x <= FilterHalfSize; x++)
+				for (int x = -filterHalfSize; x <= filterHalfSize; x++)
 				{
-					summa += filter[FilterHalfSize + y][FilterHalfSize + x] * (double)src.GetPixelValue(row + y, column + x);
+					summa += filter[filterHalfSize + y][filterHalfSize + x] * (double)source.GetPixelValue(row + y, column + x);
 				} // of x
 			} // of y
 			summa = summa * factor;
@@ -133,214 +124,149 @@ void DoFiltrationByConvolution(c2dByteGrayImage& src, c2dByteGrayImage& dest, do
 	} // of row
 }
 
-void inverseFilter(c2dFloatGrayImage& filter, double eps)
+void InverseFilter(c2dFloatGrayImage& filter, double eps)
 {
 	double summa = 0;
-	tFloat* PixelPtr = filter.PointerToPixel();
-	for (int pixel = 0; pixel < filter.NumberOfPixels(); pixel++)
+	tFloat* pixelPointer = filter.PointerToPixel();
+	int numPixels = filter.NumberOfPixels();
+	for (int pixel = 0; pixel < numPixels; pixel++)
 	{
-		*PixelPtr = 1 / (*PixelPtr + eps);
-		summa += *PixelPtr;
-		PixelPtr++;
-	}
-	PixelPtr = filter.PointerToPixel();
-	//for (int pixel = 0; pixel < filter.NumberOfPixels(); pixel++)
-	//{
-	//	*PixelPtr /= summa;
-	//	PixelPtr++;
-	//}
+		*pixelPointer = 1 / (*pixelPointer + eps);
+		summa += *pixelPointer;
+		pixelPointer++;
+	Normalize(filter, numPixels, summa);
 }
 
-void CreateCircle(c2dFloatGrayImage& Image, int  raduis, tFloat peripheryValue, tFloat centralValue)
+string AddBMPExtention(string rawName)
 {
-	int centX;
-	int centY;
-	for (int row = 0; row < NUMBER_OF_ROWS; row++)
+	return rawName + ".BMP";
+}
+}
+
+// Applies 2 LPF filters to the given image and returns the
+// file names of the blurred images (with added "LPF5c" and "LPF7c" suffixes)
+vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
+{
+	c2dByteGrayImage source(AddBMPExtention(inputFileName).c_str());
+	double LPF1[5] = { 0.061,0.242,0.383,0.242,0.061 };
+	double LPF2[7] = { 0.006,0.061,0.242,0.383,0.242,0.061,0.006 };
+	DoGaussianFiltration(source, LPF1, 2);
+	string LPF1Suffix = "LPF5c";
+	string LPF2Suffix = "LPF7c";
+	vector<string> outputFileNames =
 	{
-		for (int column = 0; column < NUMBER_OF_COLUMNS; column++)
-		{
-			centX = NUMBER_OF_ROWS / 2;
-			centY = NUMBER_OF_COLUMNS / 2;
+		inputFileName + LPF1Suffix,
+		inputFileName + LPF2Suffix
+	};
+	source.SaveToGrayBmpFile(AddBMPExtention(outputFileNames[0]).c_str());
+	source.Init(AddBMPExtention(inputFileName).c_str());
+	DoGaussianFiltration(source, LPF2, 3);
+	source.SaveToGrayBmpFile(AddBMPExtention(outputFileNames[1]).c_str());
+	return outputFileNames;
+}
 
-			int dx = centX - row;
-			int dy = centY - column;
-			if (((dx * dx) + (dy * dy)) <= (raduis * raduis))
-				Image.SetPixelValue(row, column, centralValue);
-			else
-				Image.SetPixelValue(row, column, peripheryValue);
-		}
+c2dFloatGrayImage ApplyFFT(string inputFileName,
+	bool saveFilter, bool reverseFilter, int radius)
+	c2dFloatGrayImage imageRe(AddBMPExtention(inputFileName).c_str());
+	c2dFloatGrayImage imageIm(imageRe.NumberOfRows(), imageRe.NumberOfColumns());
+	c2dFloatGrayImage gaussFilter(imageRe.NumberOfRows(), imageRe.NumberOfColumns());
+	CreateGaussianFilter(gaussFilter, radius);
+	if (reverseFilter)
+	{
+		InverseFilter(gaussFilter, 0.000001);
 	}
-}
-
-void Question2(char fig_src[], char fig_dest[][30])
-{
-	// // Question 2 
-	////Option1:
-	//c2dByteGrayImage src(fig_src);
-	//double filter1[5];
-	//double filter2[7];
-	//PrepareGausssianFilter(filter1, 5.0, 2);
-	//PrepareGausssianFilter(filter2, 2, 3);
-	//DoGaussianFiltration(src, filter1, 2);
-	//src.SaveToGrayBmpFile(fig_dest[0]);
-	//src.Init("Tim1.bmp");
-	//DoGaussianFiltration(src, filter2, 3);
-	//src.SaveToGrayBmpFile(fig_dest[1]);
-
-	////Option2:
-	//c2dByteGrayImage src(fig_src);
-	//c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
-	//double filter1[5][5] = { { 1,4,7,4,1 },{4,16,26,16,4},{7,26,41,26,7},{4,16,26,16,4},{ 1,4,7,4,1 } };
-	//double factor1 = 1.0 / 273.0;
-	//double filter2[7][7] = { {0,0,1,2,1,0,0},{0,3,13,22,13,3,0},{1,13,59,97,59,13,1},{2,22,97,159,97,22,2},{1,13,59,97,59,13,1},{0,3,13,22,13,3,0},{0,0,1,2,1,0,0} };
-	//double factor2 = 1.0 / 1003.0;
-	////DoFiltrationByConvolution(src, dest, filter1, factor1);
-	////dest.SaveToGrayBmpFile(fig_dest[0]);
-	//DoFiltrationByConvolution(src, dest, filter2, factor2);
-	//dest.SaveToGrayBmpFile(fig_dest[1]);
-
-	//Option3:
-	c2dByteGrayImage src(fig_src);
-	double filter1[5] = { 0.061,0.242,0.383,0.242,0.061 };
-	double filter2[7] = { 0.006,0.061,0.242,0.383,0.242,0.061,0.006 };
-	DoGaussianFiltration(src, filter1, 2);
-	src.SaveToGrayBmpFile(fig_dest[0]);
-	src.Init(fig_src);
-	DoGaussianFiltration(src, filter2, 3);
-	src.SaveToGrayBmpFile(fig_dest[1]);
-
-}
-
-void Question3(char fig_src[], char fig_dest[])
-{
-	// Question 3
-
-	c2dFloatGrayImage ImageRe(fig_src);
-	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	c2dFloatGrayImage GaussFilter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	CreateGaussianFilter(GaussFilter, 80);
-	//GaussFilter.SaveAsOptimalGrayBmpFile("GaussFilter.bmp");
-	ShiftHalfSize(ImageRe);
-	ShiftHalfSize(ImageIm);
-	DoFFT(ImageRe,
+	ShiftHalfSize(imageRe);
+	ShiftHalfSize(imageIm);
+	DoFFT(imageRe,
+		imageIm,
 		ImageIm,
 		FORWARD_FFT,
 		NORMALIZE_BY_SQRT);
-	GaussFilter.SaveAsOptimalGrayBmpFile("GaussFilter.bmp");
-	DoFiltrationInFD(ImageRe, ImageIm, GaussFilter);
-	DoFFT(ImageRe,
-		ImageIm,
+	// Todo: remove after powerpoint
+	if (saveFilter)
+	{
+		gaussFilter.SaveAsOptimalGrayBmpFile("GaussFilter.bmp");
+	}
+	DoFiltrationInFD(imageRe, imageIm, gaussFilter);
+	DoFFT(imageRe,
+		imageIm,
 		REVERSE_FFT,
 		NORMALIZE_BY_SQRT);
-	ShiftHalfSize(ImageRe);
-	ShiftHalfSize(ImageIm);
-	ImageRe.SaveAsOptimalGrayBmpFile(fig_dest);
-
+	ShiftHalfSize(imageRe);
+	ShiftHalfSize(imageIm);
+	return imageRe;
 }
 
-void Question4(char files_src[][30], char files_dest1[][30], char files_dest2[][30])
-{
-	// TODO: put filters in function prepare filter.
-	double filter1[5][5] = { {-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,47,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1} };
-	double filter2[5][5] = { {-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,23.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5} };
-	double filter3[5][5] = { {-1,-4,-6,-4,-1},{-4,-16,-24,-16,-4},{-6,-24,476,-24,-6},{-4,-16,-24,-16,-4},{-1,-4,-6,-4,-1} };
-	double filter4[5][5] = { {-1,-4,-6,-4,-1},{-4,-16,-24,-16,-4},{-6,-24,221,-24,-6},{-4,-16,-24,-16,-4},{-1,-4,-6,-4,-1} };
-	double filter5[3][3] = { {0, -1, 0},{-1, 5,-1},{0, -1, 0} };
-	double filter6[5][5] = { {0,0,-1,0,0},{0,-8,-21,-8,0},{-1,-21,299,-21,-1},{0,-8,-21,-8,0},{0,0,-1,0,0} };
-	//the filters above didn't give good results.
-	double filter7[3][3] = { {0, -1.0 / 4, 0},{-1.0 / 4, 2,-1.0 / 4},{0, -1.0 / 4, 0} };
-	//selected filters
-	double filter8[3][3] = { {-1, -1, -1},{-1, 9, -1},{-1, -1, -1} };
-	double filter9[3][3] = { {-1, -2 , -1},{-2, 28 , -2},{-1, -2 , -1} };
-	double filter10[3][3] = { {-2, -2, -2},{-2, 17, -2},{-2, -2, -2} };
-	double filter11[3][3] = { {-4, -8 , -4},{-8, 64 , -8},{-4, -8 , -4} };
+// Applies a Gaussian filter in the frequency domain
+//  to the given image and saves the filtered image.
+// returns the filtered image name with added "LPFF" suffix
+string ApplyFFTAndSave(string inputFileName,
+	bool saveFilter, bool reverseFilter, int radius = 80)
+	string outputFileName = inputFileName + "LPFF";
+	c2dFloatGrayImage imageRe = ApplyFFT(inputFileName, saveFilter, reverseFilter, radius);
+	imageRe.SaveAsOptimalGrayBmpFile(AddBMPExtention(outputFileName).c_str());
+	return outputFileName;
+}
 	double filter12[3][3] = { {-8, -16 , -8},{-16, 112 , -16},{-8, -16 , -8} };
 
-	//c2dByteGrayImage src("Tim1LPF5c.bmp");
-	//c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
-	double factor1 = 1.0 / 25.0;
-	double factor3 = 1.0 / 256.0;
-	double factor6 = 1.0 / 179.0;
-	double factor9 = 1.0 / 16.0;
-	//DoFiltrationByConvolution(src, dest, filter9, factor9);
-	//dest.SaveToGrayBmpFile("Tim1HPF1c.bmp");
 
-	for (int i = 0; i < 3; i++)
+void ApplyHPFToBlurredImages(vector<string> inputFileNames)
+{
+	double HPF1[3][3] = { {-2, -2, -2},{-2, 17, -2},{-2, -2, -2} };
+	double HPF2[3][3] = { {-8, -16 , -8},{-16, 112 , -16},{-8, -16 , -8} };
+	double HTP2factor = 1.0 / 16.0;
+	int fileNamesCount = inputFileNames.size();
+	for (int i = 0; i < fileNamesCount; i++)
 	{
-		c2dByteGrayImage src(files_src[i]);
-		c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
-		DoFiltrationByConvolution(src, dest, filter10, 1);//instead of filter8
-		dest.SaveToGrayBmpFile(files_dest1[i]);
-		DoFiltrationByConvolution(src, dest, filter12, factor9);//instead of filter9,filter11
-		dest.SaveToGrayBmpFile(files_dest2[i]);
+		c2dByteGrayImage source(AddBMPExtention(inputFileNames[i]).c_str());
+		c2dByteGrayImage dest(source.NumberOfRows(), source.NumberOfColumns());
+		DoFiltrationByConvolution(source, dest, HPF1, 1);
+		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF1c").c_str());
+		DoFiltrationByConvolution(source, dest, HPF2, HTP2factor);
+		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF2c").c_str());
 	}
 }
 
-void Question5(int NumOfRows, int NumOfColumns, char files_src[][30], char files_dest[][30])
-{
-	//char files_src[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
-	//char files_dest[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
-	c2dFloatGrayImage ImageIm(NumOfRows, NumOfColumns);
-	c2dFloatGrayImage Filter(NumOfRows, NumOfColumns);
-	CreateGaussianFilter(Filter, 80);
-	inverseFilter(Filter, 0.01);
-	Filter.SaveAsOptimalGrayBmpFile("Invented_HPF_In_FD.bmp");
+void ApplyFFTToBlurredImages(vector<string> inputFileNames)
+	int fileNamesCount = inputFileNames.size();
+	for (int i = 0; i < fileNamesCount; i++)
 	for (int i = 0; i < 3; i++)
-	{
-		c2dFloatGrayImage ImageRe(files_src[i]);
-		ImageIm.Clear();
-		ShiftHalfSize(ImageRe);
-		ShiftHalfSize(ImageIm);
-		DoFFT(ImageRe,
-			ImageIm,
-			FORWARD_FFT,
-			NORMALIZE_BY_SQRT);
-		DoFiltrationInFD(ImageRe, ImageIm, Filter);
-		DoFFT(ImageRe,
-			ImageIm,
-			REVERSE_FFT,
-			NORMALIZE_BY_SQRT);
-		ShiftHalfSize(ImageRe);
-		ShiftHalfSize(ImageIm);
-		if(i==2)
-			ImageRe.SaveAsOptimalGrayBmpFile(files_dest[i]);
-		else ImageRe.SaveToGrayBmpFile(files_dest[i], -500, 500);
+		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], false, true, 70);
+		imageRe.SaveToGrayBmpFile(
+			AddBMPExtention(inputFileNames[i] + "HPFf").c_str(),
+			0, 0.00005);
+		ImageRe.SaveToGrayBmpFile(files_dest[i], 0, 0.00005);
 	}
 }
 
-void Question7()
-{
-	char fig_src[] = "Tim2.bmp";
-	char dest_q2[2][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"} };
-	Question2(fig_src, dest_q2);
-	char dest_q3[] = "Tim2LPFF.bmp";
-	Question3(fig_src, dest_q3);
-	char files_src_q4[3][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"},{"Tim2LPFF.bmp"} };
-	char files_dest1_q4[3][30] = { {"Tim2LPF5cHPF1c.bmp"},{"Tim2LPF7cHPF1c.bmp"},{"Tim2LPFFHPF1c.bmp"} };
-	char files_dest2_q4[3][30] = { {"Tim2LPF5cHPF2c.bmp"},{"Tim2LPF7cHPF2c.bmp"},{"Tim2LPFFHPF2c.bmp"} };
-	Question4(files_src_q4, files_dest1_q4, files_dest2_q4);
-	char files_src_q5[3][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"},{"Tim2LPFF.bmp"} };
-	char files_dest_q5[3][30] = { {"Tim2LPF5cHPFf.bmp"},{"Tim2LPF7cHPFf.bmp"},{"Tim2LPFFHPFf.bmp"} };
-	Question5(320, 320, files_src_q5, files_dest_q5);
-}
 
 void main()
-{
-	char fig_src[] = "Tim1.bmp";
-	char dest_q2[2][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"} };
-	Question2(fig_src, dest_q2);
-	char dest_q3[] = "Tim1LPFF.bmp";
-	Question3(fig_src, dest_q3);
-	char files_src_q4[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
-	char files_dest1_q4[3][30] = { {"Tim1LPF5cHPF1c.bmp"},{"Tim1LPF7cHPF1c.bmp"},{"Tim1LPFFHPF1c.bmp"} };
-	char files_dest2_q4[3][30] = { {"Tim1LPF5cHPF2c.bmp"},{"Tim1LPF7cHPF2c.bmp"},{"Tim1LPFFHPF2c.bmp"} };
-	Question4(files_src_q4, files_dest1_q4, files_dest2_q4);
-	char files_src_q5[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
-	char files_dest_q5[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
+	//Question 2
+	cout << "Beginning question 2." << endl;
+	string grayImageName = "Tim1";
+	vector<string> blurredImagesNames = ApplyFastGaussianFilterConvolution(grayImageName);
+
+	//Question 3
+	cout << "Finished question 2. Beginning question 3." << endl;
+	blurredImagesNames.push_back(ApplyFFTAndSave(grayImageName, true, false));
+
+	//Question 4
+	cout << "Finished question 3. Beginning question 4." << endl;
+	ApplyHPFToBlurredImages(blurredImagesNames);
+
+	//Question 5
+	cout << "Finished question 4. Beginning question 5." << endl;
+	ApplyFFTToBlurredImages(blurredImagesNames);
+
+	//Question 7
+	cout << "Finished question 5. Beginning question 7." << endl;
+	string TVTestImageName = "Tim2";
+	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
+	blurredTVImagesNames.push_back(ApplyFFTAndSave(TVTestImageName, false, false));
 	Question5(480,640, files_src_q5, files_dest_q5);
 
-	//Question7();
+	ApplyHPFToBlurredImages(blurredTVImagesNames);
+	ApplyFFTToBlurredImages(blurredTVImagesNames);
 
-	cout << "Press any key to exit" << endl;
-	_getch();
+	system("pause");
 }
