@@ -65,15 +65,6 @@ void DoGaussianFiltration(c2dByteGrayImage& source, double filter[], int filterH
 	} // of row
 }
 
-void Normalize(c2dFloatGrayImage& filter, int numPixels, double summa)
-{
-	tFloat* pixelPointer = filter.PointerToPixel();
-	for (int pixel = 0; pixel < numPixels; pixel++)
-	{
-		*pixelPointer /= summa;
-		pixelPointer++;
-	}
-}
 
 void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 {
@@ -94,7 +85,6 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 			image.SetPixelValue(row, column, z);
 		}
 	}
-	Normalize(image, image.NumberOfPixels(), summa);
 }
 
 void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest, double filter[][3], double factor)
@@ -134,7 +124,6 @@ void InverseFilter(c2dFloatGrayImage& filter, double eps)
 		summa += *pixelPointer;
 		pixelPointer++;
 	}
-	Normalize(filter, numPixels, summa);
 }
 
 string AddBMPExtention(string rawName)
@@ -165,15 +154,15 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 }
 
 c2dFloatGrayImage ApplyFFT(string inputFileName,
-	bool saveFilter, bool reverseFilter, int radius)
+	bool saveFilter, bool reverseFilter)
 {
 	c2dFloatGrayImage imageRe(AddBMPExtention(inputFileName).c_str());
 	c2dFloatGrayImage imageIm(imageRe.NumberOfRows(), imageRe.NumberOfColumns());
 	c2dFloatGrayImage gaussFilter(imageRe.NumberOfRows(), imageRe.NumberOfColumns());
-	CreateGaussianFilter(gaussFilter, radius);
+	CreateGaussianFilter(gaussFilter, 80);
 	if (reverseFilter)
 	{
-		InverseFilter(gaussFilter, 0.000001);
+		InverseFilter(gaussFilter, 0.01);
 	}
 	ShiftHalfSize(imageRe);
 	ShiftHalfSize(imageIm);
@@ -200,10 +189,10 @@ c2dFloatGrayImage ApplyFFT(string inputFileName,
 //  to the given image and saves the filtered image.
 // returns the filtered image name with added "LPFF" suffix
 string ApplyFFTAndSave(string inputFileName,
-	bool saveFilter, bool reverseFilter, int radius = 80)
+	bool saveFilter, bool reverseFilter)
 {
 	string outputFileName = inputFileName + "LPFF";
-	c2dFloatGrayImage imageRe = ApplyFFT(inputFileName, saveFilter, reverseFilter, radius);
+	c2dFloatGrayImage imageRe = ApplyFFT(inputFileName, saveFilter, reverseFilter);
 	imageRe.SaveAsOptimalGrayBmpFile(AddBMPExtention(outputFileName).c_str());
 	return outputFileName;
 }
@@ -231,10 +220,16 @@ void ApplyFFTToBlurredImages(vector<string> inputFileNames)
 	int fileNamesCount = inputFileNames.size();
 	for (int i = 0; i < fileNamesCount; i++)
 	{
-		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], false, true, 70);
-		imageRe.SaveToGrayBmpFile(
-			AddBMPExtention(inputFileNames[i] + "HPFf").c_str(),
-			0, 0.00005);
+		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], false, true);
+		string outputFileName = AddBMPExtention(inputFileNames[i] + "HPFf");
+		if (i == fileNamesCount - 1)
+		{
+			imageRe.SaveAsOptimalGrayBmpFile(outputFileName.c_str());
+		}
+		else
+		{
+			imageRe.SaveToGrayBmpFile(outputFileName.c_str(), -500, 500);
+		}
 	}
 }
 
