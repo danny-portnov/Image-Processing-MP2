@@ -104,7 +104,9 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 	{
 		for (int column = 0; column < image.NumberOfColumns(); column++)
 		{
-			*image.fastAndDangerousPointerToPixel(row, column) /= summa;
+			tFloat* ptr = image.fastAndDangerousPointerToPixel(row, column);
+			*ptr /= summa;
+			//*ptr += 0.000001;
 		}
 	}
 }
@@ -255,36 +257,63 @@ void Question4()
 
 void Question5()
 {
-	c2dFloatGrayImage ImageRe("Tim1LPF5c.bmp");
-	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	c2dFloatGrayImage Filter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	CreateGaussianFilter(Filter, 80);
-	inverseFilter(Filter, 0.000001);
+	//c2dFloatGrayImage ImageRe("Tim1LPF5c.bmp");
+	//c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
+	//c2dFloatGrayImage Filter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
+	//CreateGaussianFilter(Filter, 80);
+	//inverseFilter(Filter, 0.000001);
 	//CreateCircle(Filter, 20, 1, 0);
-	ShiftHalfSize(ImageRe);
-	ShiftHalfSize(ImageIm);
-	DoFFT(ImageRe,
-		ImageIm,
-		FORWARD_FFT,
-		NORMALIZE_BY_SQRT);
-	Filter.SaveAsOptimalGrayBmpFile("Filter.bmp");
-	DoFiltrationInFD(ImageRe, ImageIm, Filter);
-	DoFFT(ImageRe,
-		ImageIm,
-		REVERSE_FFT,
-		NORMALIZE_BY_SQRT);
-	ShiftHalfSize(ImageRe);
-	ShiftHalfSize(ImageIm);
-	ImageRe.SaveAsOptimalGrayBmpFile("Tim1HPFf.bmp");
-	//ImageRe.SaveToGrayBmpFile("Tim1HPFf.bmp",0,150);
+	//ShiftHalfSize(ImageRe);
+	//ShiftHalfSize(ImageIm);
+	//DoFFT(ImageRe,
+	//	ImageIm,
+	//	FORWARD_FFT,
+	//	NORMALIZE_BY_SQRT);
+	//Filter.SaveAsOptimalGrayBmpFile("Filter.bmp");
+	//DoFiltrationInFD(ImageRe, ImageIm, Filter);
+	//DoFFT(ImageRe,
+	//	ImageIm,
+	//	REVERSE_FFT,
+	//	NORMALIZE_BY_SQRT);
+	//ShiftHalfSize(ImageRe);
+	//ShiftHalfSize(ImageIm);
+	//ImageRe.SaveAsOptimalGrayBmpFile("Tim1HPFf.bmp");
+	////ImageRe.SaveToGrayBmpFile("Tim1HPFf.bmp",0,150);
+	
+	char files_src[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
+	char files_dest[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
+	c2dFloatGrayImage ImageIm(NUMBER_OF_ROWS, NUMBER_OF_COLUMNS);
+	c2dFloatGrayImage Filter(NUMBER_OF_ROWS, NUMBER_OF_COLUMNS);
+	CreateGaussianFilter(Filter, 70);
+	inverseFilter(Filter, 0.000001);
+	for (int i = 0; i < 3; i++)
+	{
+		c2dFloatGrayImage ImageRe(files_src[i]);
+		ImageIm.Clear();
+		ShiftHalfSize(ImageRe);
+		ShiftHalfSize(ImageIm);
+		DoFFT(ImageRe,
+			ImageIm,
+			FORWARD_FFT,
+			NORMALIZE_BY_SQRT);
+		DoFiltrationInFD(ImageRe, ImageIm, Filter);
+		DoFFT(ImageRe,
+			ImageIm,
+			REVERSE_FFT,
+			NORMALIZE_BY_SQRT);
+		ShiftHalfSize(ImageRe);
+		ShiftHalfSize(ImageIm);
+		//ImageRe.SaveAsOptimalGrayBmpFile(files_dest[i]);
+		ImageRe.SaveToGrayBmpFile(files_dest[i],0,0.00005);
+	}
 }
 
 void main()
 {
 	//Question2();
 	//Question3();
-	Question4();
-	//Question5();
+	//Question4();
+	Question5();
 
 	cout << "Press any key to exit" << endl;
 	_getch();
