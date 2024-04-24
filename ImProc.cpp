@@ -37,7 +37,6 @@ void PrepareGausssianFilter(double filter[], double sigma, int FilterHalfSize)
 	}
 }
 
-// uses temp_dest inside
 void DoGaussianFiltration(c2dByteGrayImage& src, double filter[], int FilterHalfSize)
 {
 	c2dByteGrayImage temp_dest(src.NumberOfRows(), src.NumberOfColumns());
@@ -100,14 +99,14 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 			image.SetPixelValue(row, column, z);
 		}
 	}
-	for (int row = 0; row < image.NumberOfRows(); row++)
-	{
-		for (int column = 0; column < image.NumberOfColumns(); column++)
-		{
-			tFloat* ptr = image.fastAndDangerousPointerToPixel(row, column);
-			*ptr /= summa;
-		}
-	}
+	//for (int row = 0; row < image.NumberOfRows(); row++)
+	//{
+	//	for (int column = 0; column < image.NumberOfColumns(); column++)
+	//	{
+	//		tFloat* ptr = image.fastAndDangerousPointerToPixel(row, column);
+	//		*ptr /= summa;
+	//	}
+	//}
 }
 
 void DoFiltrationByConvolution(c2dByteGrayImage& src, c2dByteGrayImage& dest, double filter[][3], double factor)
@@ -145,11 +144,11 @@ void inverseFilter(c2dFloatGrayImage& filter, double eps)
 		PixelPtr++;
 	}
 	PixelPtr = filter.PointerToPixel();
-	for (int pixel = 0; pixel < filter.NumberOfPixels(); pixel++)
-	{
-		*PixelPtr /= summa;
-		PixelPtr++;
-	}
+	//for (int pixel = 0; pixel < filter.NumberOfPixels(); pixel++)
+	//{
+	//	*PixelPtr /= summa;
+	//	PixelPtr++;
+	//}
 }
 
 void CreateCircle(c2dFloatGrayImage& Image, int  raduis, tFloat peripheryValue, tFloat centralValue)
@@ -220,6 +219,7 @@ void Question3(char fig_src[], char fig_dest[])
 	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
 	c2dFloatGrayImage GaussFilter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
 	CreateGaussianFilter(GaussFilter, 80);
+	//GaussFilter.SaveAsOptimalGrayBmpFile("GaussFilter.bmp");
 	ShiftHalfSize(ImageRe);
 	ShiftHalfSize(ImageIm);
 	DoFFT(ImageRe,
@@ -241,7 +241,7 @@ void Question3(char fig_src[], char fig_dest[])
 void Question4(char files_src[][30], char files_dest1[][30], char files_dest2[][30])
 {
 	// TODO: put filters in function prepare filter.
-	double filter1[5][5] = { {-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,49,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1} };
+	double filter1[5][5] = { {-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,47,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1} };
 	double filter2[5][5] = { {-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,23.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5} };
 	double filter3[5][5] = { {-1,-4,-6,-4,-1},{-4,-16,-24,-16,-4},{-6,-24,476,-24,-6},{-4,-16,-24,-16,-4},{-1,-4,-6,-4,-1} };
 	double filter4[5][5] = { {-1,-4,-6,-4,-1},{-4,-16,-24,-16,-4},{-6,-24,221,-24,-6},{-4,-16,-24,-16,-4},{-1,-4,-6,-4,-1} };
@@ -282,8 +282,9 @@ void Question5(int NumOfRows, int NumOfColumns, char files_src[][30], char files
 	//char files_dest[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
 	c2dFloatGrayImage ImageIm(NumOfRows, NumOfColumns);
 	c2dFloatGrayImage Filter(NumOfRows, NumOfColumns);
-	CreateGaussianFilter(Filter, 70);
-	inverseFilter(Filter, 0.000001);
+	CreateGaussianFilter(Filter, 80);
+	inverseFilter(Filter, 0.01);
+	Filter.SaveAsOptimalGrayBmpFile("Invented_HPF_In_FD.bmp");
 	for (int i = 0; i < 3; i++)
 	{
 		c2dFloatGrayImage ImageRe(files_src[i]);
@@ -301,8 +302,9 @@ void Question5(int NumOfRows, int NumOfColumns, char files_src[][30], char files
 			NORMALIZE_BY_SQRT);
 		ShiftHalfSize(ImageRe);
 		ShiftHalfSize(ImageIm);
-		//ImageRe.SaveAsOptimalGrayBmpFile(files_dest[i]);
-		ImageRe.SaveToGrayBmpFile(files_dest[i], 0, 0.00005);
+		if(i==2)
+			ImageRe.SaveAsOptimalGrayBmpFile(files_dest[i]);
+		else ImageRe.SaveToGrayBmpFile(files_dest[i], -500, 500);
 	}
 }
 
@@ -324,15 +326,15 @@ void Question7()
 
 void main()
 {
-	//char fig_src[] = "Tim1.bmp";
-	//char dest_q2[2][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"} };
-	//Question2(fig_src, dest_q2);
-	//char dest_q3[] = "Tim1LPFF.bmp";
-	//Question3(fig_src, dest_q3);
-	//char files_src_q4[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
-	//char files_dest1_q4[3][30] = { {"Tim1LPF5cHPF1c.bmp"},{"Tim1LPF7cHPF1c.bmp"},{"Tim1LPFFHPF1c.bmp"} };
-	//char files_dest2_q4[3][30] = { {"Tim1LPF5cHPF2c.bmp"},{"Tim1LPF7cHPF2c.bmp"},{"Tim1LPFFHPF2c.bmp"} };
-	//Question4(files_src_q4, files_dest1_q4, files_dest2_q4);
+	char fig_src[] = "Tim1.bmp";
+	char dest_q2[2][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"} };
+	Question2(fig_src, dest_q2);
+	char dest_q3[] = "Tim1LPFF.bmp";
+	Question3(fig_src, dest_q3);
+	char files_src_q4[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
+	char files_dest1_q4[3][30] = { {"Tim1LPF5cHPF1c.bmp"},{"Tim1LPF7cHPF1c.bmp"},{"Tim1LPFFHPF1c.bmp"} };
+	char files_dest2_q4[3][30] = { {"Tim1LPF5cHPF2c.bmp"},{"Tim1LPF7cHPF2c.bmp"},{"Tim1LPFFHPF2c.bmp"} };
+	Question4(files_src_q4, files_dest1_q4, files_dest2_q4);
 	char files_src_q5[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
 	char files_dest_q5[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
 	Question5(480,640, files_src_q5, files_dest_q5);
