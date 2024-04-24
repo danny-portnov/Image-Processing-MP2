@@ -185,34 +185,50 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 	return outputFileNames;
 }
 
-// Applies a Gaussian filter in the frequency domain
-//  to the given image and saves the filtered image.
-// returns the filtered image name with added "LPFF" suffix
-string ApplyFFT(string inputFileName)
+c2dFloatGrayImage ApplyFFT(string inputFileName,
+	bool saveFilter, bool reverseFilter, int radius)
 {
-	c2dFloatGrayImage ImageRe(AddBMPExtention(inputFileName).c_str());
-	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	c2dFloatGrayImage GaussFilter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
-	CreateGaussianFilter(GaussFilter, 80);
-	ShiftHalfSize(ImageRe);
-	ShiftHalfSize(ImageIm);
-	DoFFT(ImageRe,
-		ImageIm,
+	c2dFloatGrayImage imageRe(AddBMPExtention(inputFileName).c_str());
+	c2dFloatGrayImage imageIm(imageRe.NumberOfRows(), imageRe.NumberOfColumns());
+	c2dFloatGrayImage gaussFilter(imageRe.NumberOfRows(), imageRe.NumberOfColumns());
+	CreateGaussianFilter(gaussFilter, radius);
+	if (reverseFilter)
+	{
+		InverseFilter(gaussFilter, 0.000001);
+	}
+	ShiftHalfSize(imageRe);
+	ShiftHalfSize(imageIm);
+	DoFFT(imageRe,
+		imageIm,
 		FORWARD_FFT,
 		NORMALIZE_BY_SQRT);
 	// Todo: remove after powerpoint
-	GaussFilter.SaveAsOptimalGrayBmpFile("GaussFilter.bmp");
-	DoFiltrationInFD(ImageRe, ImageIm, GaussFilter);
-	DoFFT(ImageRe,
-		ImageIm,
+	if (saveFilter)
+	{
+		gaussFilter.SaveAsOptimalGrayBmpFile("GaussFilter.bmp");
+	}
+	DoFiltrationInFD(imageRe, imageIm, gaussFilter);
+	DoFFT(imageRe,
+		imageIm,
 		REVERSE_FFT,
 		NORMALIZE_BY_SQRT);
-	ShiftHalfSize(ImageRe);
-	ShiftHalfSize(ImageIm);
+	ShiftHalfSize(imageRe);
+	ShiftHalfSize(imageIm);
+	return imageRe;
+}
+
+// Applies a Gaussian filter in the frequency domain
+//  to the given image and saves the filtered image.
+// returns the filtered image name with added "LPFF" suffix
+string ApplyFFTAndSave(string inputFileName,
+	bool saveFilter, bool reverseFilter, int radius = 80)
+{
 	string outputFileName = inputFileName + "LPFF";
-	ImageRe.SaveAsOptimalGrayBmpFile(AddBMPExtention(outputFileName).c_str());
+	c2dFloatGrayImage imageRe = ApplyFFT(inputFileName, saveFilter, reverseFilter, radius);
+	imageRe.SaveAsOptimalGrayBmpFile(AddBMPExtention(outputFileName).c_str());
 	return outputFileName;
 }
+
 
 void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 {
@@ -231,31 +247,13 @@ void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 	}
 }
 
-void ApplyFFTToBlurredImages(int NumOfRows, int NumOfColumns, vector<string> inputFileNames)
+void ApplyFFTToBlurredImages(vector<string> inputFileNames)
 {
-	c2dFloatGrayImage imageIm(NumOfRows, NumOfColumns);
-	c2dFloatGrayImage filter(NumOfRows, NumOfColumns);
-	CreateGaussianFilter(filter, 70);
-	InverseFilter(filter, 0.000001);
 	int fileNamesCount = inputFileNames.size();
 	for (int i = 0; i < fileNamesCount; i++)
 	{
-		c2dFloatGrayImage ImageRe(AddBMPExtention(inputFileNames[i]).c_str());
-		imageIm.Clear();
-		ShiftHalfSize(ImageRe);
-		ShiftHalfSize(imageIm);
-		DoFFT(ImageRe,
-			imageIm,
-			FORWARD_FFT,
-			NORMALIZE_BY_SQRT);
-		DoFiltrationInFD(ImageRe, imageIm, filter);
-		DoFFT(ImageRe,
-			imageIm,
-			REVERSE_FFT,
-			NORMALIZE_BY_SQRT);
-		ShiftHalfSize(ImageRe);
-		ShiftHalfSize(imageIm);
-		ImageRe.SaveToGrayBmpFile(
+		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], false, true, 70);
+		imageRe.SaveToGrayBmpFile(
 			AddBMPExtention(inputFileNames[i] + "HPFf").c_str(),
 			0, 0.00005);
 	}
@@ -269,21 +267,21 @@ void main()
 	vector<string> blurredImagesNames = ApplyFastGaussianFilterConvolution(grayImageName);
 
 	//Question 3
-	blurredImagesNames.push_back(ApplyFFT(grayImageName));
+	blurredImagesNames.push_back(ApplyFFTAndSave(grayImageName, true, false));
 
 	//Question 4
 	ApplyHPFToBlurredImages(blurredImagesNames);
 
 	//Question 5
-	ApplyFFTToBlurredImages(480, 640, blurredImagesNames);
+	ApplyFFTToBlurredImages(blurredImagesNames);
 
 	//Question 7
 	string TVTestImageName = "Tim2.bmp";
 	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
-	blurredTVImagesNames.push_back(ApplyFFT(TVTestImageName));
+	blurredTVImagesNames.push_back(ApplyFFTAndSave(TVTestImageName, false, false));
 
 	ApplyHPFToBlurredImages(blurredTVImagesNames);
-	ApplyFFTToBlurredImages(320, 320, blurredTVImagesNames);
+	ApplyFFTToBlurredImages(blurredTVImagesNames);
 
 	// Check if the program is attached to a debugger
 	if (!::IsDebuggerPresent()) {
