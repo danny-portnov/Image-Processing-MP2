@@ -105,14 +105,7 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 			image.SetPixelValue(row, column, z);
 		}
 	}
-	for (int row = 0; row < numRows; row++)
-	{
-		for (int column = 0; column < numColumns; column++)
-		{
-			tFloat* ptr = image.fastAndDangerousPointerToPixel(row, column);
-			*ptr /= summa;
-		}
-	}
+	Normalize(image, image.NumberOfPixels(), summa);
 }
 
 void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest, double filter[][3], double factor)
@@ -141,23 +134,28 @@ void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest,
 	} // of row
 }
 
+void Normalize(c2dFloatGrayImage& filter, int numPixels, double summa)
+{
+	tFloat* pixelPointer = filter.PointerToPixel();
+	for (int pixel = 0; pixel < numPixels; pixel++)
+	{
+		*pixelPointer /= summa;
+		pixelPointer++;
+	}
+}
+
 void InverseFilter(c2dFloatGrayImage& filter, double eps)
 {
 	double summa = 0;
-	tFloat* PixelPtr = filter.PointerToPixel();
+	tFloat* pixelPointer = filter.PointerToPixel();
 	int numPixels = filter.NumberOfPixels();
 	for (int pixel = 0; pixel < numPixels; pixel++)
 	{
-		*PixelPtr = 1 / (*PixelPtr + eps);
-		summa += *PixelPtr;
-		PixelPtr++;
+		*pixelPointer = 1 / (*pixelPointer + eps);
+		summa += *pixelPointer;
+		pixelPointer++;
 	}
-	PixelPtr = filter.PointerToPixel();
-	for (int pixel = 0; pixel < numPixels; pixel++)
-	{
-		*PixelPtr /= summa;
-		PixelPtr++;
-	}
+	Normalize(filter, numPixels, summa);
 }
 
 string AddBMPExtention(string rawName)
@@ -218,38 +216,17 @@ string ApplyFFT(string inputFileName)
 
 void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 {
-	// TODO: put filters in function prepare filter.
-	double filter1[5][5] = { {-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,49,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1} };
-	double filter2[5][5] = { {-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,23.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5},{-0.5,-0.5,-0.5,-0.5,-0.5} };
-	double filter3[5][5] = { {-1,-4,-6,-4,-1},{-4,-16,-24,-16,-4},{-6,-24,476,-24,-6},{-4,-16,-24,-16,-4},{-1,-4,-6,-4,-1} };
-	double filter4[5][5] = { {-1,-4,-6,-4,-1},{-4,-16,-24,-16,-4},{-6,-24,221,-24,-6},{-4,-16,-24,-16,-4},{-1,-4,-6,-4,-1} };
-	double filter5[3][3] = { {0, -1, 0},{-1, 5,-1},{0, -1, 0} };
-	double filter6[5][5] = { {0,0,-1,0,0},{0,-8,-21,-8,0},{-1,-21,299,-21,-1},{0,-8,-21,-8,0},{0,0,-1,0,0} };
-	//the filters above didn't give good results.
-	double filter7[3][3] = { {0, -1.0 / 4, 0},{-1.0 / 4, 2,-1.0 / 4},{0, -1.0 / 4, 0} };
-	//selected filters
-	double filter8[3][3] = { {-1, -1, -1},{-1, 9, -1},{-1, -1, -1} };
-	double filter9[3][3] = { {-1, -2 , -1},{-2, 28 , -2},{-1, -2 , -1} };
-	double filter10[3][3] = { {-2, -2, -2},{-2, 17, -2},{-2, -2, -2} };
-	double filter11[3][3] = { {-4, -8 , -4},{-8, 64 , -8},{-4, -8 , -4} };
-	double filter12[3][3] = { {-8, -16 , -8},{-16, 112 , -16},{-8, -16 , -8} };
-
-	//c2dByteGrayImage src("Tim1LPF5c.bmp");
-	//c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
-	double factor1 = 1.0 / 25.0;
-	double factor3 = 1.0 / 256.0;
-	double factor6 = 1.0 / 179.0;
-	double factor9 = 1.0 / 16.0;
-	//DoFiltrationByConvolution(src, dest, filter9, factor9);
-	//dest.SaveToGrayBmpFile("Tim1HPF1c.bmp");
+	double HPF1[3][3] = { {-2, -2, -2},{-2, 17, -2},{-2, -2, -2} };
+	double HPF2[3][3] = { {-8, -16 , -8},{-16, 112 , -16},{-8, -16 , -8} };
+	double HTP2factor = 1.0 / 16.0;
 	int fileNamesCount = inputFileNames.size();
 	for (int i = 0; i < fileNamesCount; i++)
 	{
 		c2dByteGrayImage source(AddBMPExtention(inputFileNames[i]).c_str());
 		c2dByteGrayImage dest(source.NumberOfRows(), source.NumberOfColumns());
-		DoFiltrationByConvolution(source, dest, filter10, 1);
+		DoFiltrationByConvolution(source, dest, HPF1, 1);
 		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF1c").c_str());
-		DoFiltrationByConvolution(source, dest, filter12, factor9);
+		DoFiltrationByConvolution(source, dest, HPF2, HTP2factor);
 		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF2c").c_str());
 	}
 }
@@ -278,7 +255,6 @@ void ApplyFFTToBlurredImages(int NumOfRows, int NumOfColumns, vector<string> inp
 			NORMALIZE_BY_SQRT);
 		ShiftHalfSize(ImageRe);
 		ShiftHalfSize(imageIm);
-		//ImageRe.SaveAsOptimalGrayBmpFile(files_dest[i]);
 		ImageRe.SaveToGrayBmpFile(
 			AddBMPExtention(inputFileNames[i] + "HPFf").c_str(),
 			0, 0.00005);
