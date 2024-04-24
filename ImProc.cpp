@@ -242,19 +242,24 @@ void ApplyFFTToBlurredImages(vector<string> inputFileNames)
 void main()
 {
 	//Question 2
+	cout << "Beginning question 2." << endl;
 	string grayImageName = "Tim1";
 	vector<string> blurredImagesNames = ApplyFastGaussianFilterConvolution(grayImageName);
 
 	//Question 3
+	cout << "Finished question 2. Beginning question 3." << endl;
 	blurredImagesNames.push_back(ApplyFFTAndSave(grayImageName, true, false));
 
 	//Question 4
+	cout << "Finished question 3. Beginning question 4." << endl;
 	ApplyHPFToBlurredImages(blurredImagesNames);
 
 	//Question 5
+	cout << "Finished question 4. Beginning question 5." << endl;
 	ApplyFFTToBlurredImages(blurredImagesNames);
 
 	//Question 7
+	cout << "Finished question 5. Beginning question 7." << endl;
 	string TVTestImageName = "Tim2";
 	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
 	blurredTVImagesNames.push_back(ApplyFFTAndSave(TVTestImageName, false, false));
@@ -262,9 +267,5 @@ void main()
 	ApplyHPFToBlurredImages(blurredTVImagesNames);
 	ApplyFFTToBlurredImages(blurredTVImagesNames);
 
-	// Check if the program is attached to a debugger
-	if (!::IsDebuggerPresent()) {
-		// Wait for user input before closing the console window only when .exe is run
-		system("pause");
-	}
+	system("pause");
 }
