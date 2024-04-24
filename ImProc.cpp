@@ -11,6 +11,7 @@ using namespace std;  // explain someday
 #define _USE_MATH_DEFINES 
 #include <math.h> 
 #include <Windows.h>
+#include <vector>
 
 #include "c2dByteGrayImage.h"
 #include "c2dFloatGrayImage.h"
@@ -174,50 +175,35 @@ void CreateCircle(c2dFloatGrayImage& Image, int  raduis, tFloat peripheryValue, 
 	}
 }
 
-void Question2(char fig_src[], char fig_dest[][30])
+string AddBMPExtention(string rawName)
 {
-	// // Question 2 
-	////Option1:
-	//c2dByteGrayImage src(fig_src);
-	//double filter1[5];
-	//double filter2[7];
-	//PrepareGausssianFilter(filter1, 5.0, 2);
-	//PrepareGausssianFilter(filter2, 2, 3);
-	//DoGaussianFiltration(src, filter1, 2);
-	//src.SaveToGrayBmpFile(fig_dest[0]);
-	//src.Init("Tim1.bmp");
-	//DoGaussianFiltration(src, filter2, 3);
-	//src.SaveToGrayBmpFile(fig_dest[1]);
-
-	////Option2:
-	//c2dByteGrayImage src(fig_src);
-	//c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
-	//double filter1[5][5] = { { 1,4,7,4,1 },{4,16,26,16,4},{7,26,41,26,7},{4,16,26,16,4},{ 1,4,7,4,1 } };
-	//double factor1 = 1.0 / 273.0;
-	//double filter2[7][7] = { {0,0,1,2,1,0,0},{0,3,13,22,13,3,0},{1,13,59,97,59,13,1},{2,22,97,159,97,22,2},{1,13,59,97,59,13,1},{0,3,13,22,13,3,0},{0,0,1,2,1,0,0} };
-	//double factor2 = 1.0 / 1003.0;
-	////DoFiltrationByConvolution(src, dest, filter1, factor1);
-	////dest.SaveToGrayBmpFile(fig_dest[0]);
-	//DoFiltrationByConvolution(src, dest, filter2, factor2);
-	//dest.SaveToGrayBmpFile(fig_dest[1]);
-
-	//Option3:
-	c2dByteGrayImage src(fig_src);
-	double filter1[5] = { 0.061,0.242,0.383,0.242,0.061 };
-	double filter2[7] = { 0.006,0.061,0.242,0.383,0.242,0.061,0.006 };
-	DoGaussianFiltration(src, filter1, 2);
-	src.SaveToGrayBmpFile(fig_dest[0]);
-	src.Init(fig_src);
-	DoGaussianFiltration(src, filter2, 3);
-	src.SaveToGrayBmpFile(fig_dest[1]);
-
+	return rawName + ".BMP";
 }
 
-void Question3(char fig_src[], char fig_dest[])
-{
-	// Question 3
 
-	c2dFloatGrayImage ImageRe(fig_src);
+vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
+{
+	c2dByteGrayImage source(AddBMPExtention(inputFileName).c_str());
+	double LPF1[5] = { 0.061,0.242,0.383,0.242,0.061 };
+	double LPF2[7] = { 0.006,0.061,0.242,0.383,0.242,0.061,0.006 };
+	DoGaussianFiltration(source, LPF1, 2);
+	string LPF1Suffix = "LPF5c";
+	string LPF2Suffix = "LPF7c";
+	vector<string> outputFileNames =
+	{
+		inputFileName + LPF1Suffix,
+		inputFileName + LPF2Suffix
+	};
+	source.SaveToGrayBmpFile(AddBMPExtention(outputFileNames[0]).c_str());
+	source.Init(inputFileName.c_str());
+	DoGaussianFiltration(source, LPF2, 3);
+	source.SaveToGrayBmpFile(AddBMPExtention(outputFileNames[1]).c_str());
+	return outputFileNames;
+}
+
+string ApplyGaussianFilterInFD(string inputFileName)
+{
+	c2dFloatGrayImage ImageRe(AddBMPExtention(inputFileName).c_str());
 	c2dFloatGrayImage ImageIm(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
 	c2dFloatGrayImage GaussFilter(ImageRe.NumberOfRows(), ImageRe.NumberOfColumns());
 	CreateGaussianFilter(GaussFilter, 80);
@@ -227,6 +213,7 @@ void Question3(char fig_src[], char fig_dest[])
 		ImageIm,
 		FORWARD_FFT,
 		NORMALIZE_BY_SQRT);
+	// Todo: remove after powerpoint
 	GaussFilter.SaveAsOptimalGrayBmpFile("GaussFilter.bmp");
 	DoFiltrationInFD(ImageRe, ImageIm, GaussFilter);
 	DoFFT(ImageRe,
@@ -235,11 +222,12 @@ void Question3(char fig_src[], char fig_dest[])
 		NORMALIZE_BY_SQRT);
 	ShiftHalfSize(ImageRe);
 	ShiftHalfSize(ImageIm);
-	ImageRe.SaveAsOptimalGrayBmpFile(fig_dest);
-
+	string outputFileName = inputFileName + "LPFF";
+	ImageRe.SaveAsOptimalGrayBmpFile(AddBMPExtention(outputFileName).c_str());
+	return outputFileName;
 }
 
-void Question4(char files_src[][30], char files_dest1[][30], char files_dest2[][30])
+void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 {
 	// TODO: put filters in function prepare filter.
 	double filter1[5][5] = { {-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,49,-1,-1},{-1,-1,-1,-1,-1},{-1,-1,-1,-1,-1} };
@@ -266,14 +254,14 @@ void Question4(char files_src[][30], char files_dest1[][30], char files_dest2[][
 	//DoFiltrationByConvolution(src, dest, filter9, factor9);
 	//dest.SaveToGrayBmpFile("Tim1HPF1c.bmp");
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < inputFileNames.size(); i++)
 	{
-		c2dByteGrayImage src(files_src[i]);
+		c2dByteGrayImage src(AddBMPExtention(inputFileNames[i]).c_str());
 		c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
-		DoFiltrationByConvolution(src, dest, filter10, 1);//instead of filter8
-		dest.SaveToGrayBmpFile(files_dest1[i]);
-		DoFiltrationByConvolution(src, dest, filter12, factor9);//instead of filter9,filter11
-		dest.SaveToGrayBmpFile(files_dest2[i]);
+		DoFiltrationByConvolution(src, dest, filter10, 1);
+		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF1c").c_str());
+		DoFiltrationByConvolution(src, dest, filter12, factor9);
+		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF2c").c_str());
 	}
 }
 
@@ -311,13 +299,13 @@ void Question7()
 {
 	char fig_src[] = "Tim2.bmp";
 	char dest_q2[2][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"} };
-	Question2(fig_src, dest_q2);
+	ApplyFastGaussianFilterConvolution(fig_src, dest_q2);
 	char dest_q3[] = "Tim2LPFF.bmp";
-	Question3(fig_src, dest_q3);
+	ApplyGaussianFilterInFD(fig_src, dest_q3);
 	char files_src_q4[3][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"},{"Tim2LPFF.bmp"} };
 	char files_dest1_q4[3][30] = { {"Tim2LPF5cHPF1c.bmp"},{"Tim2LPF7cHPF1c.bmp"},{"Tim2LPFFHPF1c.bmp"} };
 	char files_dest2_q4[3][30] = { {"Tim2LPF5cHPF2c.bmp"},{"Tim2LPF7cHPF2c.bmp"},{"Tim2LPFFHPF2c.bmp"} };
-	Question4(files_src_q4, files_dest1_q4, files_dest2_q4);
+	ApplyHPFToBlurredImages(files_dest1_q4, files_dest2_q4, );
 	char files_src_q5[3][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"},{"Tim2LPFF.bmp"} };
 	char files_dest_q5[3][30] = { {"Tim2LPF5cHPFf.bmp"},{"Tim2LPF7cHPFf.bmp"},{"Tim2LPFFHPFf.bmp"} };
 	Question5(320, 320, files_src_q5, files_dest_q5);
@@ -325,17 +313,19 @@ void Question7()
 
 void main()
 {
-	char fig_src[] = "Tim1.bmp";
-	char dest_q2[2][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"} };
-	Question2(fig_src, dest_q2);
-	char dest_q3[] = "Tim1LPFF.bmp";
-	Question3(fig_src, dest_q3);
-	char files_src_q4[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
-	char files_dest1_q4[3][30] = { {"Tim1LPF5cHPF1c.bmp"},{"Tim1LPF7cHPF1c.bmp"},{"Tim1LPFFHPF1c.bmp"} };
-	char files_dest2_q4[3][30] = { {"Tim1LPF5cHPF2c.bmp"},{"Tim1LPF7cHPF2c.bmp"},{"Tim1LPFFHPF2c.bmp"} };
-	Question4(files_src_q4, files_dest1_q4, files_dest2_q4);
-	char files_src_q5[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
-	char files_dest_q5[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
+	//Question 2
+	string grayImageName = "Tim1";
+	vector<string> blurredImagesNames = ApplyFastGaussianFilterConvolution(grayImageName);
+
+	//Question 3
+	blurredImagesNames.push_back(ApplyGaussianFilterInFD(grayImageName));
+
+	//Question 4
+	ApplyHPFToBlurredImages(blurredImagesNames);
+
+
+	string files_src_q5[3] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
+	string files_dest_q5[3] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
 	Question5(480, 640, files_src_q5, files_dest_q5);
 
 	Question7();
