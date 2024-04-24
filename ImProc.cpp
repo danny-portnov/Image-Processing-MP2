@@ -39,21 +39,22 @@ void PrepareGausssianFilter(double filter[], double sigma, int FilterHalfSize)
 	}
 }
 
-// uses temp_dest inside
-void DoGaussianFiltration(c2dByteGrayImage& src, double filter[], int FilterHalfSize)
+void DoGaussianFiltration(c2dByteGrayImage& source, double filter[], int filterHalfSize)
 {
-	c2dByteGrayImage temp_dest(src.NumberOfRows(), src.NumberOfColumns());
+	int numRows = source.NumberOfRows();
+	int numColumns = source.NumberOfColumns();
+	c2dByteGrayImage temp_dest(numRows, numColumns);
 	double summa;
 
 	// x direction
-	for (int row = 0; row < src.NumberOfRows(); row++)
+	for (int row = 0; row < numRows; row++)
 	{
-		for (int column = FilterHalfSize; column < src.NumberOfColumns() - FilterHalfSize; column++)
+		for (int column = filterHalfSize; column < numColumns - filterHalfSize; column++)
 		{
 			summa = 0;
-			for (int x = -FilterHalfSize; x <= FilterHalfSize; x++)
+			for (int x = -filterHalfSize; x <= filterHalfSize; x++)
 			{
-				summa = summa + filter[FilterHalfSize + x] * (double)src.GetPixelValue(row, column + x);
+				summa = summa + filter[filterHalfSize + x] * (double)source.GetPixelValue(row, column + x);
 			} // of x
 			if (summa < 0)
 				summa = 0;
@@ -65,22 +66,22 @@ void DoGaussianFiltration(c2dByteGrayImage& src, double filter[], int FilterHalf
 	} // of row
 
 	// Clear Source !!!
-	src.Clear();
+	source.Clear();
 
 	// y direction
-	for (int row = FilterHalfSize; row < src.NumberOfRows() - FilterHalfSize; row++)
+	for (int row = filterHalfSize; row < numRows - filterHalfSize; row++)
 	{
-		for (int column = 0; column < src.NumberOfColumns(); column++)
+		for (int column = 0; column < numColumns; column++)
 		{
 			summa = 0;
-			for (int y = -FilterHalfSize; y <= FilterHalfSize; y++)
+			for (int y = -filterHalfSize; y <= filterHalfSize; y++)
 			{
-				summa += filter[FilterHalfSize + y] * (double)temp_dest.GetPixelValue(row + y, column);
+				summa += filter[filterHalfSize + y] * (double)temp_dest.GetPixelValue(row + y, column);
 
 			} // of y
 			if (summa < 0) summa = 0;
 			if (summa > 255) summa = 255;
-			src.SetPixelValue(row, column, (tByte)(summa + 0.5));
+			source.SetPixelValue(row, column, (tByte)(summa + 0.5));
 		} // of column
 	} // of row
 }
@@ -89,12 +90,14 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 {
 	tFloat x, y, r, z;
 	double summa = 0;
-	for (int row = 0; row < image.NumberOfRows(); row++)
+	int numRows = image.NumberOfRows();
+	int numColumns = image.NumberOfColumns();
+	for (int row = 0; row < numRows; row++)
 	{
-		for (int column = 0; column < image.NumberOfColumns(); column++)
+		for (int column = 0; column < numColumns; column++)
 		{
-			y = row - image.NumberOfRows() / 2;
-			x = column - image.NumberOfColumns() / 2;
+			y = row - numRows / 2;
+			x = column - numColumns / 2;
 			r = sqrt(y * y + x * x);
 			z = r / sigmaRadius;
 			z = exp(-z * z);
@@ -102,9 +105,9 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 			image.SetPixelValue(row, column, z);
 		}
 	}
-	for (int row = 0; row < image.NumberOfRows(); row++)
+	for (int row = 0; row < numRows; row++)
 	{
-		for (int column = 0; column < image.NumberOfColumns(); column++)
+		for (int column = 0; column < numColumns; column++)
 		{
 			tFloat* ptr = image.fastAndDangerousPointerToPixel(row, column);
 			*ptr /= summa;
@@ -112,20 +115,22 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 	}
 }
 
-void DoFiltrationByConvolution(c2dByteGrayImage& src, c2dByteGrayImage& dest, double filter[][3], double factor)
+void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest, double filter[][3], double factor)
 {
-	int FilterHalfSize = 1;
+	int filterHalfSize = 1;
 	dest.Clear();
-	for (int row = FilterHalfSize; row < src.NumberOfRows() - FilterHalfSize; row++)
+	int numRows = source.NumberOfRows();
+	int numColumns = source.NumberOfColumns();
+	for (int row = filterHalfSize; row < numRows - filterHalfSize; row++)
 	{
-		for (int column = FilterHalfSize; column < src.NumberOfColumns() - FilterHalfSize; column++)
+		for (int column = filterHalfSize; column < numColumns - filterHalfSize; column++)
 		{
 			double summa = 0;
-			for (int y = -FilterHalfSize; y <= FilterHalfSize; y++)
+			for (int y = -filterHalfSize; y <= filterHalfSize; y++)
 			{
-				for (int x = -FilterHalfSize; x <= FilterHalfSize; x++)
+				for (int x = -filterHalfSize; x <= filterHalfSize; x++)
 				{
-					summa += filter[FilterHalfSize + y][FilterHalfSize + x] * (double)src.GetPixelValue(row + y, column + x);
+					summa += filter[filterHalfSize + y][filterHalfSize + x] * (double)source.GetPixelValue(row + y, column + x);
 				} // of x
 			} // of y
 			summa = summa * factor;
@@ -140,38 +145,18 @@ void inverseFilter(c2dFloatGrayImage& filter, double eps)
 {
 	double summa = 0;
 	tFloat* PixelPtr = filter.PointerToPixel();
-	for (int pixel = 0; pixel < filter.NumberOfPixels(); pixel++)
+	int numPixels = filter.NumberOfPixels();
+	for (int pixel = 0; pixel < numPixels; pixel++)
 	{
 		*PixelPtr = 1 / (*PixelPtr + eps);
 		summa += *PixelPtr;
 		PixelPtr++;
 	}
 	PixelPtr = filter.PointerToPixel();
-	for (int pixel = 0; pixel < filter.NumberOfPixels(); pixel++)
+	for (int pixel = 0; pixel < numPixels; pixel++)
 	{
 		*PixelPtr /= summa;
 		PixelPtr++;
-	}
-}
-
-void CreateCircle(c2dFloatGrayImage& Image, int  raduis, tFloat peripheryValue, tFloat centralValue)
-{
-	int centX;
-	int centY;
-	for (int row = 0; row < NUMBER_OF_ROWS; row++)
-	{
-		for (int column = 0; column < NUMBER_OF_COLUMNS; column++)
-		{
-			centX = NUMBER_OF_ROWS / 2;
-			centY = NUMBER_OF_COLUMNS / 2;
-
-			int dx = centX - row;
-			int dy = centY - column;
-			if (((dx * dx) + (dy * dy)) <= (raduis * raduis))
-				Image.SetPixelValue(row, column, centralValue);
-			else
-				Image.SetPixelValue(row, column, peripheryValue);
-		}
 	}
 }
 
@@ -180,7 +165,8 @@ string AddBMPExtention(string rawName)
 	return rawName + ".BMP";
 }
 
-
+// Applies 2 LPF filters to the given image and returns the
+// file names of the blurred images (with added "LPF5c" and "LPF7c" suffixes)
 vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 {
 	c2dByteGrayImage source(AddBMPExtention(inputFileName).c_str());
@@ -201,6 +187,9 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 	return outputFileNames;
 }
 
+// Applies a Gaussian filter in the frequency domain
+//  to the given image and saves the filtered image.
+// returns the filtered image name with added "LPFF" suffix
 string ApplyGaussianFilterInFD(string inputFileName)
 {
 	c2dFloatGrayImage ImageRe(AddBMPExtention(inputFileName).c_str());
@@ -265,7 +254,7 @@ void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 	}
 }
 
-void Question5(int NumOfRows, int NumOfColumns, char files_src[][30], char files_dest[][30])
+void Question5(int NumOfRows, int NumOfColumns, vector<string> outputFileNames, vector<string> inputFileNames)
 {
 	//char files_src[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
 	//char files_dest[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
@@ -275,7 +264,7 @@ void Question5(int NumOfRows, int NumOfColumns, char files_src[][30], char files
 	inverseFilter(Filter, 0.000001);
 	for (int i = 0; i < 3; i++)
 	{
-		c2dFloatGrayImage ImageRe(files_src[i]);
+		c2dFloatGrayImage ImageRe(inputFileNames[i]);
 		ImageIm.Clear();
 		ShiftHalfSize(ImageRe);
 		ShiftHalfSize(ImageIm);
@@ -291,7 +280,7 @@ void Question5(int NumOfRows, int NumOfColumns, char files_src[][30], char files
 		ShiftHalfSize(ImageRe);
 		ShiftHalfSize(ImageIm);
 		//ImageRe.SaveAsOptimalGrayBmpFile(files_dest[i]);
-		ImageRe.SaveToGrayBmpFile(files_dest[i], 0, 0.00005);
+		ImageRe.SaveToGrayBmpFile(outputFileNames[i], 0, 0.00005);
 	}
 }
 
@@ -308,7 +297,7 @@ void Question7()
 	ApplyHPFToBlurredImages(files_dest1_q4, files_dest2_q4, );
 	char files_src_q5[3][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"},{"Tim2LPFF.bmp"} };
 	char files_dest_q5[3][30] = { {"Tim2LPF5cHPFf.bmp"},{"Tim2LPF7cHPFf.bmp"},{"Tim2LPFFHPFf.bmp"} };
-	Question5(320, 320, files_src_q5, files_dest_q5);
+	Question5(320, 320, , );
 }
 
 void main()
@@ -323,10 +312,9 @@ void main()
 	//Question 4
 	ApplyHPFToBlurredImages(blurredImagesNames);
 
-
-	string files_src_q5[3] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
+	//Question 5
 	string files_dest_q5[3] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
-	Question5(480, 640, files_src_q5, files_dest_q5);
+	Question5(480, 640, , );
 
 	Question7();
 
