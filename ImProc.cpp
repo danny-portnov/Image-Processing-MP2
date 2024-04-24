@@ -141,7 +141,7 @@ void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest,
 	} // of row
 }
 
-void inverseFilter(c2dFloatGrayImage& filter, double eps)
+void InverseFilter(c2dFloatGrayImage& filter, double eps)
 {
 	double summa = 0;
 	tFloat* PixelPtr = filter.PointerToPixel();
@@ -242,63 +242,49 @@ void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 	double factor9 = 1.0 / 16.0;
 	//DoFiltrationByConvolution(src, dest, filter9, factor9);
 	//dest.SaveToGrayBmpFile("Tim1HPF1c.bmp");
-
-	for (int i = 0; i < inputFileNames.size(); i++)
+	int fileNamesCount = inputFileNames.size();
+	for (int i = 0; i < fileNamesCount; i++)
 	{
-		c2dByteGrayImage src(AddBMPExtention(inputFileNames[i]).c_str());
-		c2dByteGrayImage dest(src.NumberOfRows(), src.NumberOfColumns());
-		DoFiltrationByConvolution(src, dest, filter10, 1);
+		c2dByteGrayImage source(AddBMPExtention(inputFileNames[i]).c_str());
+		c2dByteGrayImage dest(source.NumberOfRows(), source.NumberOfColumns());
+		DoFiltrationByConvolution(source, dest, filter10, 1);
 		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF1c").c_str());
-		DoFiltrationByConvolution(src, dest, filter12, factor9);
+		DoFiltrationByConvolution(source, dest, filter12, factor9);
 		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF2c").c_str());
 	}
 }
 
-void Question5(int NumOfRows, int NumOfColumns, vector<string> outputFileNames, vector<string> inputFileNames)
+void ApplyFFTToBlurredImages(int NumOfRows, int NumOfColumns, vector<string> inputFileNames)
 {
-	//char files_src[3][30] = { {"Tim1LPF5c.bmp"},{"Tim1LPF7c.bmp"},{"Tim1LPFF.bmp"} };
-	//char files_dest[3][30] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
-	c2dFloatGrayImage ImageIm(NumOfRows, NumOfColumns);
-	c2dFloatGrayImage Filter(NumOfRows, NumOfColumns);
-	CreateGaussianFilter(Filter, 70);
-	inverseFilter(Filter, 0.000001);
-	for (int i = 0; i < 3; i++)
+	c2dFloatGrayImage imageIm(NumOfRows, NumOfColumns);
+	c2dFloatGrayImage filter(NumOfRows, NumOfColumns);
+	CreateGaussianFilter(filter, 70);
+	InverseFilter(filter, 0.000001);
+	int fileNamesCount = inputFileNames.size();
+	for (int i = 0; i < fileNamesCount; i++)
 	{
-		c2dFloatGrayImage ImageRe(inputFileNames[i]);
-		ImageIm.Clear();
+		c2dFloatGrayImage ImageRe(AddBMPExtention(inputFileNames[i]).c_str());
+		imageIm.Clear();
 		ShiftHalfSize(ImageRe);
-		ShiftHalfSize(ImageIm);
+		ShiftHalfSize(imageIm);
 		DoFFT(ImageRe,
-			ImageIm,
+			imageIm,
 			FORWARD_FFT,
 			NORMALIZE_BY_SQRT);
-		DoFiltrationInFD(ImageRe, ImageIm, Filter);
+		DoFiltrationInFD(ImageRe, imageIm, filter);
 		DoFFT(ImageRe,
-			ImageIm,
+			imageIm,
 			REVERSE_FFT,
 			NORMALIZE_BY_SQRT);
 		ShiftHalfSize(ImageRe);
-		ShiftHalfSize(ImageIm);
+		ShiftHalfSize(imageIm);
 		//ImageRe.SaveAsOptimalGrayBmpFile(files_dest[i]);
-		ImageRe.SaveToGrayBmpFile(outputFileNames[i], 0, 0.00005);
+		ImageRe.SaveToGrayBmpFile(
+			AddBMPExtention(inputFileNames[i] + "HPFf").c_str(),
+			0, 0.00005);
 	}
 }
 
-void Question7()
-{
-	char fig_src[] = "Tim2.bmp";
-	char dest_q2[2][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"} };
-	ApplyFastGaussianFilterConvolution(fig_src, dest_q2);
-	char dest_q3[] = "Tim2LPFF.bmp";
-	ApplyGaussianFilterInFD(fig_src, dest_q3);
-	char files_src_q4[3][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"},{"Tim2LPFF.bmp"} };
-	char files_dest1_q4[3][30] = { {"Tim2LPF5cHPF1c.bmp"},{"Tim2LPF7cHPF1c.bmp"},{"Tim2LPFFHPF1c.bmp"} };
-	char files_dest2_q4[3][30] = { {"Tim2LPF5cHPF2c.bmp"},{"Tim2LPF7cHPF2c.bmp"},{"Tim2LPFFHPF2c.bmp"} };
-	ApplyHPFToBlurredImages(files_dest1_q4, files_dest2_q4, );
-	char files_src_q5[3][30] = { {"Tim2LPF5c.bmp"},{"Tim2LPF7c.bmp"},{"Tim2LPFF.bmp"} };
-	char files_dest_q5[3][30] = { {"Tim2LPF5cHPFf.bmp"},{"Tim2LPF7cHPFf.bmp"},{"Tim2LPFFHPFf.bmp"} };
-	Question5(320, 320, , );
-}
 
 void main()
 {
@@ -313,10 +299,15 @@ void main()
 	ApplyHPFToBlurredImages(blurredImagesNames);
 
 	//Question 5
-	string files_dest_q5[3] = { {"Tim1LPF5cHPFf.bmp"},{"Tim1LPF7cHPFf.bmp"},{"Tim1LPFFHPFf.bmp"} };
-	Question5(480, 640, , );
+	ApplyFFTToBlurredImages(480, 640, blurredImagesNames);
 
-	Question7();
+	//Question 7
+	string TVTestImageName = "Tim2.bmp";
+	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
+	blurredTVImagesNames.push_back(ApplyGaussianFilterInFD(TVTestImageName));
+
+	ApplyHPFToBlurredImages(blurredTVImagesNames);
+	ApplyFFTToBlurredImages(320, 320, blurredTVImagesNames);
 
 	// Check if the program is attached to a debugger
 	if (!::IsDebuggerPresent()) {
