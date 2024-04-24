@@ -16,28 +16,7 @@ using namespace std;  // explain someday
 #include "c2dByteGrayImage.h"
 #include "c2dFloatGrayImage.h"
 #include "FFT.h"
-#include <time.h>  // for spead measurements
 
-#define NUMBER_OF_ROWS 480
-#define NUMBER_OF_COLUMNS 640
-
-
-void PrepareGausssianFilter(double filter[], double sigma, int FilterHalfSize)
-{
-	double summa = 0;
-	double temp;
-	for (int i = 0; i < (2 * FilterHalfSize + 1); i++)
-	{
-		temp = (double)(i - FilterHalfSize) / sigma;
-		temp = exp(-temp * temp);
-		filter[i] = temp;
-		summa += temp;
-	}
-	for (int i = 0; i < (2 * FilterHalfSize + 1); i++)
-	{
-		filter[i] = filter[i] / summa;
-	}
-}
 
 void DoGaussianFiltration(c2dByteGrayImage& source, double filter[], int filterHalfSize)
 {
