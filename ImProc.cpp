@@ -65,6 +65,16 @@ void DoGaussianFiltration(c2dByteGrayImage& source, double filter[], int filterH
 	} // of row
 }
 
+void Normalize(c2dFloatGrayImage& filter, int numPixels, double summa)
+{
+	tFloat* pixelPointer = filter.PointerToPixel();
+	for (int pixel = 0; pixel < numPixels; pixel++)
+	{
+		*pixelPointer /= summa;
+		pixelPointer++;
+	}
+}
+
 void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 {
 	tFloat x, y, r, z;
@@ -113,16 +123,6 @@ void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest,
 	} // of row
 }
 
-void Normalize(c2dFloatGrayImage& filter, int numPixels, double summa)
-{
-	tFloat* pixelPointer = filter.PointerToPixel();
-	for (int pixel = 0; pixel < numPixels; pixel++)
-	{
-		*pixelPointer /= summa;
-		pixelPointer++;
-	}
-}
-
 void InverseFilter(c2dFloatGrayImage& filter, double eps)
 {
 	double summa = 0;
@@ -158,7 +158,7 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 		inputFileName + LPF2Suffix
 	};
 	source.SaveToGrayBmpFile(AddBMPExtention(outputFileNames[0]).c_str());
-	source.Init(inputFileName.c_str());
+	source.Init(AddBMPExtention(inputFileName).c_str());
 	DoGaussianFiltration(source, LPF2, 3);
 	source.SaveToGrayBmpFile(AddBMPExtention(outputFileNames[1]).c_str());
 	return outputFileNames;
@@ -255,7 +255,7 @@ void main()
 	ApplyFFTToBlurredImages(blurredImagesNames);
 
 	//Question 7
-	string TVTestImageName = "Tim2.bmp";
+	string TVTestImageName = "Tim2";
 	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
 	blurredTVImagesNames.push_back(ApplyFFTAndSave(TVTestImageName, false, false));
 
