@@ -113,18 +113,32 @@ void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest,
 	} // of row
 }
 
-void InverseFilter(c2dFloatGrayImage& filter, double eps)
+void CreateInverseGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 {
+	tFloat x, y, z, total;
 	double summa = 0;
-	tFloat* pixelPointer = filter.PointerToPixel();
-	int numPixels = filter.NumberOfPixels();
-	for (int pixel = 0; pixel < numPixels; pixel++)
+	int numRows = image.NumberOfRows();
+	int numColumns = image.NumberOfColumns();
+	for (int row = 0; row < numRows; row++)
 	{
-		*pixelPointer = 1 / (*pixelPointer + eps);
-		summa += *pixelPointer;
-		pixelPointer++;
+		for (int column = 0; column < numColumns; column++)
+		{
+			// Calculate squared distances from the center of the image
+			y = (row - numRows / 2) * (row - numRows / 2);
+			x = (column - numColumns / 2) * (column - numColumns / 2);
+
+			// Calculate the total squared distance divided by sigma squared
+			total = (x + y) / (sigmaRadius * sigmaRadius);
+
+			// Apply the inverse Gaussian function and scaling
+			z = 255.0 * (1 - exp(-total));
+
+			// Set the pixel value in the image
+			image.SetPixelValue(row, column, z);
+		}
 	}
 }
+
 
 string AddBMPExtention(string rawName)
 {
@@ -154,9 +168,9 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 }
 
 c2dFloatGrayImage ApplyFFT(string inputFileName, bool saveFilter,
-	bool reverseFilter, int radius, double eps)
+	bool reverseFilter, int radius)
 {
-	if (reverseFilter && eps == 0.0)
+	if (reverseFilter  == 0.0)
 	{
 		throw std::invalid_argument("eps value must be provided when reverseFilter is true");
 	}
@@ -166,7 +180,7 @@ c2dFloatGrayImage ApplyFFT(string inputFileName, bool saveFilter,
 	CreateGaussianFilter(gaussFilter, radius);
 	if (reverseFilter)
 	{
-		InverseFilter(gaussFilter, eps);
+		CreateInverseGaussianFilter(gaussFilter, radius);
 	}
 	ShiftHalfSize(imageRe);
 	ShiftHalfSize(imageIm);
@@ -193,10 +207,10 @@ c2dFloatGrayImage ApplyFFT(string inputFileName, bool saveFilter,
 //  to the given image and saves the filtered image.
 // returns the filtered image name with added "LPFF" suffix
 string ApplyFFTAndSave(string inputFileName,
-	bool saveFilter, bool reverseFilter, int radius, double eps = 0.0)
+	bool saveFilter, bool reverseFilter, int radius)
 {
 	string outputFileName = inputFileName + "LPFF";
-	c2dFloatGrayImage imageRe = ApplyFFT(inputFileName, saveFilter, reverseFilter, radius, eps);
+	c2dFloatGrayImage imageRe = ApplyFFT(inputFileName, saveFilter, reverseFilter, radius);
 	imageRe.SaveAsOptimalGrayBmpFile(AddBMPExtention(outputFileName).c_str());
 	return outputFileName;
 }
@@ -220,21 +234,22 @@ void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 }
 
 void ApplyFFTToBlurredImages(vector<string> inputFileNames,
-	tFloat minValue, tFloat maxValue, int radius, double eps)
+	tFloat minValue, tFloat maxValue, int radius, double)
 {
 	int fileNamesCount = inputFileNames.size();
 	for (int i = 0; i < fileNamesCount; i++)
 	{
-		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], false, true, radius, eps);
+		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], false, true, radius);
 		string outputFileName = AddBMPExtention("HPFf" + inputFileNames[i]);
-		if (i == fileNamesCount - 1)
-		{
-			imageRe.SaveAsOptimalGrayBmpFile(outputFileName.c_str());
-		}
-		else
-		{
-			imageRe.SaveToGrayBmpFile(outputFileName.c_str(), minValue, maxValue);
-		}
+		imageRe.SaveAsOptimalGrayBmpFile(outputFileName.c_str());
+		//if (i == fileNamesCount - 1)
+		//{
+		//	imageRe.SaveAsOptimalGrayBmpFile(outputFileName.c_str());
+		//}
+		//else
+		//{
+		//	imageRe.SaveToGrayBmpFile(outputFileName.c_str(), minValue, maxValue);
+		//}
 	}
 }
 
@@ -245,11 +260,11 @@ void main()
 	cout << "Beginning question 2." << endl;
 	string grayImageName = "Tim1";
 	vector<string> blurredImagesNames = ApplyFastGaussianFilterConvolution(grayImageName);
-
+	int radiusForTextImage = 80;
 	//Question 3
 	cout << "Finished question 2. Beginning question 3." << endl;
 	blurredImagesNames.push_back(ApplyFFTAndSave(
-		grayImageName, true, false, 80));
+		grayImageName, true, false, radiusForTextImage));
 
 	//Question 4
 	cout << "Finished question 3. Beginning question 4." << endl;
@@ -258,19 +273,19 @@ void main()
 	//Question 5
 	cout << "Finished question 4. Beginning question 5." << endl;
 	ApplyFFTToBlurredImages(
-		blurredImagesNames, -500, 500, 80, 0.01);
+		blurredImagesNames, -500, 500, radiusForTextImage, 0.01);
 
 	//Question 7
-	cout << "Finished question 5. Beginning question 7." << endl;
-	int radiusForTV = 30;
-	string TVTestImageName = "Tim2";
-	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
-	blurredTVImagesNames.push_back(ApplyFFTAndSave(
-		TVTestImageName, false, false, radiusForTV));
+	//cout << "Finished question 5. Beginning question 7." << endl;
+	//int radiusForTV = 30;
+	//string TVTestImageName = "Tim2";
+	//vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
+	//blurredTVImagesNames.push_back(ApplyFFTAndSave(
+	//	TVTestImageName, false, false, radiusForTV));
 
-	ApplyHPFToBlurredImages(blurredTVImagesNames);
-	ApplyFFTToBlurredImages(
-		blurredTVImagesNames, 0, 1000, radiusForTV, 0.01);
+	//ApplyHPFToBlurredImages(blurredTVImagesNames);
+	//ApplyFFTToBlurredImages(
+	//	blurredTVImagesNames, 0, 1000, radiusForTV, 0.01);
 
 	system("pause");
 }
