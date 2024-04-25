@@ -263,7 +263,7 @@ void main()
 
 	//Question 7
 	cout << "Finished question 5. Beginning question 7." << endl;
-	int radiusForTV = 30;
+	int radiusForTV = 40;
 	string TVTestImageName = "Tim2";
 	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
 	blurredTVImagesNames.push_back(ApplyFFTAndSave(TVTestImageName, false, false, radiusForTV));
