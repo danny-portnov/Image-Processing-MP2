@@ -262,14 +262,15 @@ void main()
 
 	//Question 7
 	cout << "Finished question 5. Beginning question 7." << endl;
+	int radiusForTV = 30;
 	string TVTestImageName = "Tim2";
 	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
 	blurredTVImagesNames.push_back(ApplyFFTAndSave(
-		TVTestImageName, false, false, 60));
+		TVTestImageName, false, false, radiusForTV));
 
 	ApplyHPFToBlurredImages(blurredTVImagesNames);
 	ApplyFFTToBlurredImages(
-		blurredTVImagesNames, -2000, 2000, 60, 0.01);
+		blurredTVImagesNames, 0, 1000, radiusForTV, 0.01);
 
 	system("pause");
 }
