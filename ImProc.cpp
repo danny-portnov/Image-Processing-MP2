@@ -130,7 +130,6 @@ string AddBMPExtention(string rawName)
 {
 	return rawName + ".BMP";
 }
-}
 
 // Applies 2 LPF filters to the given image and returns the
 // file names of the blurred images (with added "LPF5c" and "LPF7c" suffixes)
