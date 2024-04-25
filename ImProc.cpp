@@ -170,10 +170,6 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 c2dFloatGrayImage ApplyFFT(string inputFileName, bool saveFilter,
 	bool reverseFilter, int radius)
 {
-	if (reverseFilter  == 0.0)
-	{
-		throw std::invalid_argument("eps value must be provided when reverseFilter is true");
-	}
 	c2dFloatGrayImage imageRe(AddBMPExtention(inputFileName).c_str());
 	c2dFloatGrayImage imageIm(imageRe.NumberOfRows(), imageRe.NumberOfColumns());
 	c2dFloatGrayImage gaussFilter(imageRe.NumberOfRows(), imageRe.NumberOfColumns());
