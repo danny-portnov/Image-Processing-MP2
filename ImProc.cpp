@@ -233,8 +233,7 @@ void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 	}
 }
 
-void ApplyFFTToBlurredImages(vector<string> inputFileNames,
-	tFloat minValue, tFloat maxValue, int radius, double)
+void ApplyFFTToBlurredImages(vector<string> inputFileNames, int radius)
 {
 	int fileNamesCount = inputFileNames.size();
 	for (int i = 0; i < fileNamesCount; i++)
@@ -242,14 +241,6 @@ void ApplyFFTToBlurredImages(vector<string> inputFileNames,
 		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], false, true, radius);
 		string outputFileName = AddBMPExtention("HPFf" + inputFileNames[i]);
 		imageRe.SaveAsOptimalGrayBmpFile(outputFileName.c_str());
-		//if (i == fileNamesCount - 1)
-		//{
-		//	imageRe.SaveAsOptimalGrayBmpFile(outputFileName.c_str());
-		//}
-		//else
-		//{
-		//	imageRe.SaveToGrayBmpFile(outputFileName.c_str(), minValue, maxValue);
-		//}
 	}
 }
 
@@ -272,20 +263,17 @@ void main()
 
 	//Question 5
 	cout << "Finished question 4. Beginning question 5." << endl;
-	ApplyFFTToBlurredImages(
-		blurredImagesNames, -500, 500, radiusForTextImage, 0.01);
+	ApplyFFTToBlurredImages(blurredImagesNames, radiusForTextImage);
 
 	//Question 7
-	//cout << "Finished question 5. Beginning question 7." << endl;
-	//int radiusForTV = 30;
-	//string TVTestImageName = "Tim2";
-	//vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
-	//blurredTVImagesNames.push_back(ApplyFFTAndSave(
-	//	TVTestImageName, false, false, radiusForTV));
+	cout << "Finished question 5. Beginning question 7." << endl;
+	int radiusForTV = 30;
+	string TVTestImageName = "Tim2";
+	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
+	blurredTVImagesNames.push_back(ApplyFFTAndSave(TVTestImageName, false, false, radiusForTV));
 
-	//ApplyHPFToBlurredImages(blurredTVImagesNames);
-	//ApplyFFTToBlurredImages(
-	//	blurredTVImagesNames, 0, 1000, radiusForTV, 0.01);
+	ApplyHPFToBlurredImages(blurredTVImagesNames);
+	ApplyFFTToBlurredImages(blurredTVImagesNames, radiusForTV);
 
 	system("pause");
 }
