@@ -106,9 +106,9 @@ void CreateGaussianFilter(c2dFloatGrayImage& image, tFloat sigmaRadius)
 
 
 // Applies a convolution filter to the source image and stores the result in the destination image. 
-void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest, c2dFloatGrayImage& filter, double factor)
+void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest, double filter[][3], double factor)
 {
-	int filterHalfSize = filter.NumberOfRows() / 2;
+	int filterHalfSize = 1;
 	// Clear the destination image
 	dest.Clear();
 	int numRows = source.NumberOfRows();
@@ -123,7 +123,7 @@ void DoFiltrationByConvolution(c2dByteGrayImage& source, c2dByteGrayImage& dest,
 				for (int x = -filterHalfSize; x <= filterHalfSize; x++)
 				{
 					// Perform the convolution operation
-					summa += filter.GetPixelValue(filterHalfSize + y, filterHalfSize + x) * (double)source.GetPixelValue(row + y, column + x);
+					summa += filter[filterHalfSize + y][filterHalfSize + x] * (double)source.GetPixelValue(row + y, column + x);
 				} // of x
 			} // of y
 			summa = summa * factor;
@@ -164,7 +164,6 @@ string AddBMPExtention(string rawName)
 	return rawName + ".BMP";
 }
 
-
 // Applies fast Gaussian filter convolution to the input image using pre-defined filter kernels.
 vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 {
@@ -188,7 +187,6 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 	source.SaveToGrayBmpFile(AddBMPExtention(outputFileNames[1]).c_str());
 	return outputFileNames;
 }
-
 
 
 
@@ -236,28 +234,13 @@ string ApplyFFTAndSave(string inputFileName,
 	return outputFileName;
 }
 
-void Fill3X3Filter() {
-
-}
 
 //Applies High Pass Filters (HPF) to the blurred images specified by the input filenames.
 void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 {
 	// Define High Pass Filter kernels
-	double HPF11[3][3] = { {-2, -2, -2}, {-2, 17, -2}, {-2, -2, -2} };
-	c2dFloatGrayImage HPF1(3, 3);
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			HPF1.SetPixelValue(i, j, HPF11[i][j]);
-		}
-	}
-	c2dFloatGrayImage HPF2(3, 3);
-	double HPF22[3][3] = { {-8, -16 , -8}, {-16, 112 , -16}, {-8, -16 , -8} };
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			HPF2.SetPixelValue(i, j, HPF22[i][j]);
-		}
-	}
+	double HPF1[3][3] = { {-2, -2, -2}, {-2, 17, -2}, {-2, -2, -2} };
+	double HPF2[3][3] = { {-8, -16 , -8}, {-16, 112 , -16}, {-8, -16 , -8} };
 	// Define normalization factor for HPF2
 	double HTP2factor = 1.0 / 16.0;
 	int fileNamesCount = inputFileNames.size();
@@ -269,14 +252,15 @@ void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 		// Apply HPF1 to the source image
 		DoFiltrationByConvolution(source, dest, HPF1, 1);
 		dest.SaveToGrayBmpFile(AddBMPExtention("HPF1c" + inputFileNames[i]).c_str());
-		//// Apply HPF2 to the source image
-		//DoFiltrationByConvolution(source, dest, HPF2, HTP2factor);
-		//dest.SaveToGrayBmpFile(AddBMPExtention("HPF2c" + inputFileNames[i]).c_str());
+		// Apply HPF2 to the source image
+		DoFiltrationByConvolution(source, dest, HPF2, HTP2factor);
+		dest.SaveToGrayBmpFile(AddBMPExtention("HPF2c" + inputFileNames[i]).c_str());
 	}
 }
 
 
-// Applies Fast Fourier Transform (FFT) to the blurred images specified by the input filenames and saves the filtered images.
+// Applies Fast Fourier Transform (FFT) to the blurred images specified 
+// by the input filenames and saves the filtered images.
 void ApplyFFTToBlurredImages(vector<string> inputFileNames, int radius)
 {
 	int fileNamesCount = inputFileNames.size();
