@@ -213,9 +213,9 @@ void ApplyHPFToBlurredImages(vector<string> inputFileNames)
 		c2dByteGrayImage source(AddBMPExtention(inputFileNames[i]).c_str());
 		c2dByteGrayImage dest(source.NumberOfRows(), source.NumberOfColumns());
 		DoFiltrationByConvolution(source, dest, HPF1, 1);
-		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF1c").c_str());
+		dest.SaveToGrayBmpFile(AddBMPExtention("HPF1c" + inputFileNames[i]).c_str());
 		DoFiltrationByConvolution(source, dest, HPF2, HTP2factor);
-		dest.SaveToGrayBmpFile(AddBMPExtention(inputFileNames[i] + "HPF2c").c_str());
+		dest.SaveToGrayBmpFile(AddBMPExtention("HPF2c" + inputFileNames[i]).c_str());
 	}
 }
 
@@ -226,7 +226,7 @@ void ApplyFFTToBlurredImages(vector<string> inputFileNames,
 	for (int i = 0; i < fileNamesCount; i++)
 	{
 		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], false, true, radius, eps);
-		string outputFileName = AddBMPExtention(inputFileNames[i] + "HPFf");
+		string outputFileName = AddBMPExtention("HPFf" + inputFileNames[i]);
 		if (i == fileNamesCount - 1)
 		{
 			imageRe.SaveAsOptimalGrayBmpFile(outputFileName.c_str());
