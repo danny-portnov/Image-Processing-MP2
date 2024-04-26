@@ -191,20 +191,18 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 
 
 // Applies Fast Fourier Transform (FFT) to the input image and filters it using a Gaussian filter.
-c2dFloatGrayImage ApplyFFT(string inputFileName, bool saveFilter,
-	bool reverseFilter, int radius)
+c2dFloatGrayImage ApplyFFT(string inputFileName, bool reverseFilter,
+	int radius)
 {
     // Load the input image
 	c2dFloatGrayImage imageRe(AddBMPExtention(inputFileName).c_str()); 
 	c2dFloatGrayImage imageIm(imageRe.NumberOfRows(), imageRe.NumberOfColumns());   
     // Create a Gaussian filter image with the same dimensions as the input image
 	c2dFloatGrayImage gaussFilter(imageRe.NumberOfRows(), imageRe.NumberOfColumns());  
-	CreateGaussianFilter(gaussFilter, radius);  
-	string GaussianName = "GaussFilter.bmp";    
+	CreateGaussianFilter(gaussFilter, radius);   
 	if (reverseFilter)
 	{
 		CreateInverseGaussianFilter(gaussFilter, radius);
-		GaussianName = "InversedGaussFilter.bmp";
 	}   
     // Shift both real and imaginary part images
 	ShiftHalfSize(imageRe);
@@ -226,10 +224,10 @@ c2dFloatGrayImage ApplyFFT(string inputFileName, bool saveFilter,
 //  to the given image and saves the filtered image.
 // returns the filtered image name with added "LPFF" suffix
 string ApplyFFTAndSave(string inputFileName,
-	bool saveFilter, bool reverseFilter, int radius)
+	bool reverseFilter, int radius)
 {
 	string outputFileName = inputFileName + "LPFF";
-	c2dFloatGrayImage imageRe = ApplyFFT(inputFileName, saveFilter, reverseFilter, radius);
+	c2dFloatGrayImage imageRe = ApplyFFT(inputFileName, reverseFilter, radius);
 	imageRe.SaveAsOptimalGrayBmpFile(AddBMPExtention(outputFileName).c_str());
 	return outputFileName;
 }
@@ -267,7 +265,7 @@ void ApplyFFTToBlurredImages(vector<string> inputFileNames, int radius)
 
 	for (int i = 0; i < fileNamesCount; i++)
 	{
-		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], false, true, radius);
+		c2dFloatGrayImage imageRe = ApplyFFT(inputFileNames[i], true, radius);
 		string outputFileName = AddBMPExtention("HPFf" + inputFileNames[i]);
 		imageRe.SaveAsOptimalGrayBmpFile(outputFileName.c_str());
 	}
@@ -284,7 +282,7 @@ void main()
 	//Question 3
 	cout << "Finished question 2. Beginning question 3." << endl;
 	blurredImagesNames.push_back(ApplyFFTAndSave(
-		grayImageName, true, false, radiusForTextImage));
+		grayImageName, false, radiusForTextImage));
 
 	//Question 4
 	cout << "Finished question 3. Beginning question 4." << endl;
@@ -299,7 +297,7 @@ void main()
 	int radiusForTV = 40;
 	string TVTestImageName = "Tim2";
 	vector<string> blurredTVImagesNames = ApplyFastGaussianFilterConvolution(TVTestImageName);
-	blurredTVImagesNames.push_back(ApplyFFTAndSave(TVTestImageName, true, false, radiusForTV));
+	blurredTVImagesNames.push_back(ApplyFFTAndSave(TVTestImageName, false, radiusForTV));
 
 	ApplyHPFToBlurredImages(blurredTVImagesNames);
 	ApplyFFTToBlurredImages(blurredTVImagesNames, radiusForTV);
