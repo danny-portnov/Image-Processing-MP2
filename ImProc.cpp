@@ -191,8 +191,7 @@ vector<string> ApplyFastGaussianFilterConvolution(string inputFileName)
 
 
 // Applies Fast Fourier Transform (FFT) to the input image and filters it using a Gaussian filter.
-c2dFloatGrayImage ApplyFFT(string inputFileName, bool reverseFilter,
-	int radius)
+c2dFloatGrayImage ApplyFFT(string inputFileName, bool reverseFilter, int radius)
 {
     // Load the input image
 	c2dFloatGrayImage imageRe(AddBMPExtention(inputFileName).c_str()); 
